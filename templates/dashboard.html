@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diuport ERP - Panel Corporativo Integral</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex flex-col">
+
+    <!-- TOP BAR CORPORATIVA -->
+    <header class="bg-white border-b border-slate-200 shadow-sm px-6 py-3 flex justify-between items-center z-20">
+        <div class="flex items-center space-x-4">
+            <button onclick="showLauncher()" class="p-2 hover:bg-slate-100 rounded-lg transition text-slate-600 flex items-center space-x-1.5 text-xs font-bold">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span>Aplicaciones</span>
+            </button>
+            <span class="text-xs font-extrabold text-cyan-600 tracking-wider">DIUPORT ERP</span>
+        </div>
+
+        <div class="flex items-center space-x-2.5">
+            <div class="bg-cyan-600 text-white w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shadow-md">DP</div>
+            <div>
+                <h2 class="text-xs font-black text-slate-800 tracking-wider uppercase">Enterprise Management</h2>
+                <p class="text-[10px] text-slate-400 font-medium">Sistema Multi-Módulo Interconectado</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <span class="bg-slate-900 text-white px-3 py-1 rounded text-xs font-bold shadow-sm">Soporte</span>
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                <span>👤</span><span>Admin</span>
+            </div>
+            <a href="/" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold transition">Salir</a>
+        </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- VISTA 1: LAUNCHER DE ICONOS (ESTILO ODOO) -->
+    <!-- ========================================== -->
+    <div id="viewLauncher" class="flex-grow max-w-6xl w-full mx-auto p-8 my-auto">
+        <div class="mb-8 text-center">
+            <h1 class="text-2xl font-black text-slate-800">Menú Principal de Módulos</h1>
+            <p class="text-xs text-slate-500 mt-1">Selecciona un área para operar con vistas y características especializadas</p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-6 justify-center">
+            <!-- Ventas -->
+            <div onclick="openModule('sales')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+                <div class="w-14 h-14 bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">🛒</div>
+                <span class="text-xs font-bold text-slate-700">Ventas</span>
+            </div>
+            <!-- Compras -->
+            <div onclick="openModule('purchases')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+                <div class="w-14 h-14 bg-emerald-50 group-hover:bg-emerald-600 text-emerald-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">📥</div>
+                <span class="text-xs font-bold text-slate-700">Compras</span>
+            </div>
+            <!-- Abastecimiento -->
+            <div onclick="openModule('supply')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+                <div class="w-14 h-14 bg-amber-50 group-hover:bg-amber-600 text-amber-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">📦</div>
+                <span class="text-xs font-bold text-slate-700">Abastecimiento</span>
+            </div>
+            <!-- Producción -->
+            <div onclick="openModule('production')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+                <div class="w-14 h-14 bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">⚙️</div>
+                <span class="text-xs font-bold text-slate-700">Producción</span>
+            </div>
+            <!-- RRHH -->
+            <div onclick="openModule('hr')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+                <div class="w-14 h-14 bg-rose-50 group-hover:bg-rose-600 text-rose-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">👔</div>
+                <span class="text-xs font-bold text-slate-700">RRHH</span>
+            </div>
+            <!-- Finanzas -->
+            <div onclick="openModule('finance')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+                <div class="w-14 h-14 bg-teal-50 group-hover:bg-teal-600 text-teal-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">💰</div>
+                <span class="text-xs font-bold text-slate-700">Finanzas</span>
+            </div>
+            <!-- Proyecciones -->
+            <div onclick="openModule('analysis')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+                <div class="w-14 h-14 bg-purple-50 group-hover:bg-purple-600 text-purple-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">📈</div>
+                <span class="text-xs font-bold text-slate-700">Proyecciones</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ======================================================= -->
+    <!-- VISTA 2: ENTORNO DE TRABAJO CON SIDEBAR -->
+    <!-- ======================================================= -->
+    <div id="viewWorkspace" class="flex-grow flex hidden">
+        
+        <!-- SIDEBAR PRINCIPAL -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 min-h-[calc(100vh-57px)]">
+            <div class="p-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Módulos del Sistema</div>
+            <nav class="space-y-1 px-2">
+                <button onclick="switchTab('sales')" id="navSales" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                    <span>🛒</span><span>Ventas</span>
+                </button>
+                <button onclick="switchTab('purchases')" id="navPurchases" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                    <span>📥</span><span>Compras</span>
+                </button>
+                <button onclick="switchTab('supply')" id="navSupply" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                    <span>📦</span><span>Abastecimiento</span>
+                </button>
+                <!-- Submenú contextual de Abastecimiento -->
+                <div id="supplySubmenu" class="hidden pl-6 space-y-1 py-1">
+                    <button onclick="filterSupply('all')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">📋 Almacén General</button>
+                    <button onclick="filterSupply('realtime')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">⚡ Stock en Tiempo Real</button>
+                    <button onclick="filterSupply('raw')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">🧱 Materias Primas</button>
+                    <button onclick="filterSupply('terminated')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">🏷️ Prod. Terminados / Secundarios</button>
+                    <button onclick="filterSupply('rotation')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">🔄 Rotación de Producto</button>
+                </div>
+
+                <button onclick="switchTab('production')" id="navProduction" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                    <span>⚙️</span><span>Producción</span>
+                </button>
+                <button onclick="switchTab('hr')" id="navHr" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                    <span>👔</span><span>Recursos Humanos</span>
+                </button>
+                <button onclick="switchTab('finance')" id="navFinance" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                    <span>💰</span><span>Administración y Finanzas</span>
+                </button>
+                <button onclick="switchTab('analysis')" id="navAnalysis" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                    <span>📈</span><span>Análisis y Proyección</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- CONTENIDO DINÁMICO ÚNICO POR MÓDULO -->
+        <main class="flex-grow bg-slate-100 p-8 overflow-y-auto">
+            
+            <!-- 1. VENTAS -->
+            <div id="tabSales" class="space-y-6 hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800">Módulo de Ventas e Ingresos</h2>
+                        <p class="text-[11px] text-slate-500">Gestión de salida de productos terminados y facturación comercial.</p>
+                    </div>
+                    <button onclick="openModalSale()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition">+ Registrar Venta</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b"><tr><th class="p-3">ID Venta</th><th class="p-3">Empresa</th><th class="p-3">Cliente</th><th class="p-3">Total Ingreso</th><th class="p-3">Estado</th></tr></thead><tbody id="salesTableBody"></tbody></table>
+                </div>
+            </div>
+
+            <!-- 2. COMPRAS -->
+            <div id="tabPurchases" class="space-y-6 hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800">Módulo de Compras y Proveedores</h2>
+                        <p class="text-[11px] text-slate-500">Adquisiciones que incrementan el almacén y generan cuentas por pagar.</p>
+                    </div>
+                    <button onclick="openModalPurchase()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition">+ Registrar Compra</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-xs text-slate-600">
+                    Las compras alimentan automáticamente el stock de materias primas en el módulo de Abastecimiento y actualizan el pasivo financiero.
+                </div>
+            </div>
+
+            <!-- 3. ABASTECIMIENTO (CON FILTROS LATERALES) -->
+            <div id="tabSupply" class="space-y-6 hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 id="supplyHeaderTitle" class="text-sm font-bold text-slate-800">Módulo de Abastecimiento - Almacén General</h2>
+                        <p id="supplyHeaderDesc" class="text-[11px] text-slate-500">Visualizando todo el inventario de materias primas y productos terminados.</p>
+                    </div>
+                    <button onclick="loadSupplyData()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">🔄 Actualizar Datos</button>
+                </div>
+
+                <!-- Tarjetas de Resumen -->
+                <div id="supplyCardsContainer" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Stock Total</span>
+                        <h3 id="supTotalStock" class="text-xl font-black text-amber-600 mt-1">0 Unidades</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Materias Primas (Raw)</span>
+                        <h3 id="supRawCount" class="text-xl font-black text-slate-800 mt-1">0 Ítems</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Productos Terminados</span>
+                        <h3 id="supTermCount" class="text-xl font-black text-slate-800 mt-1">0 Ítems</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Rotación de Producto</span>
+                        <h3 class="text-xl font-black text-emerald-600 mt-1">Óptima (Rotando)</h3>
+                    </div>
+                </div>
+
+                <!-- Sección Dinámica según el submenú izquierdo -->
+                <div id="supplyDynamicContent" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                        <h3 id="supplyTableTitle" class="text-xs font-bold text-slate-700 uppercase tracking-wider">Detalle de Almacén</h3>
+                    </div>
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 border-b text-slate-600">
+                            <tr>
+                                <th class="p-3">SKU</th>
+                                <th class="p-3">Descripción de Ítem</th>
+                                <th class="p-3">Tipo de Material</th>
+                                <th class="p-3">Costo Unit. (S/)</th>
+                                <th class="p-3">Precio Venta (S/)</th>
+                                <th class="p-3 font-bold">Stock Almacén</th>
+                            </tr>
+                        </thead>
+                        <tbody id="supplyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. PRODUCCIÓN -->
+            <div id="tabProduction" class="space-y-6 hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800">Módulo de Producción y Manufactura</h2>
+                        <p class="text-[11px] text-slate-500">Transformación de materias primas en productos terminados.</p>
+                    </div>
+                    <button onclick="executeProduction()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition">
+                        ⚙️ Ejecutar Orden (BOM ID: 1)
+                    </button>
+                </div>
+                <div id="productionResult" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-xs text-slate-600">
+                    Haz clic en el botón superior para simular una orden de ensamblaje en planta.
+                </div>
+            </div>
+
+            <!-- 5. RRHH -->
+            <div id="tabHr" class="space-y-6 hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800">Módulo de Recursos Humanos y Planilla</h2>
+                        <p class="text-[11px] text-slate-500">Control de personal activo, contratos y sueldos fijos.</p>
+                    </div>
+                    <button onclick="openModalHr()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition">+ Registrar Trabajador</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Total Trabajadores</span><h3 id="totalWorkers" class="text-xl font-black text-slate-800 mt-1">0</h3></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Planilla Mensual</span><h3 id="totalPayroll" class="text-xl font-black text-rose-600 mt-1">S/ 0.00</h3></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Proyección Anual Planilla</span><h3 id="annualPayroll" class="text-xl font-black text-slate-800 mt-1">S/ 0.00</h3></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b"><tr><th class="p-3">Colaborador</th><th class="p-3">DNI</th><th class="p-3">Puesto</th><th class="p-3">Sueldo</th><th class="p-3">Contrato</th><th class="p-3">Vacaciones</th></tr></thead><tbody id="hrTableBody"></tbody></table>
+                </div>
+            </div>
+
+            <!-- 6. ADMINISTRACIÓN Y FINANZAS -->
+            <div id="tabFinance" class="space-y-6 hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800">Administración y Finanzas</h2>
+                        <p class="text-[11px] text-slate-500">Consolidación en vivo de ingresos, compras, planilla y gastos.</p>
+                    </div>
+                    <button onclick="loadFinanceData()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Actualizar Reporte</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Ingresos Totales (Ventas)</span><h3 id="finIncome" class="text-xl font-black text-blue-600 mt-1">S/ 0.00</h3></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Egresos Totales (Compras+Planilla)</span><h3 id="finExpenses" class="text-xl font-black text-rose-600 mt-1">S/ 0.00</h3></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] text-slate-400 font-bold uppercase">Resultado Neto (Utilidad)</span><h3 id="finNet" class="text-xl font-black text-emerald-600 mt-1">S/ 0.00</h3></div>
+                </div>
+            </div>
+
+            <!-- 7. ANÁLISIS Y PROYECCIÓN -->
+            <div id="tabAnalysis" class="space-y-6 hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800">Análisis y Proyección (Cerebro Financiero)</h2>
+                        <p class="text-[11px] text-slate-500">Proyecciones matemáticas mensuales y anuales basadas en el historial de los módulos.</p>
+                    </div>
+                    <button onclick="loadAnalysisData()" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Calcular Proyecciones</button>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 border-b pb-2">📈 Motor Predictivo Global</h3>
+                    <div id="projectionContent" class="text-xs text-slate-600 space-y-3">
+                        Cargando proyecciones basadas en transacciones reales...
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODALES DE REGISTRO RÁPIDO -->
+    <div id="modalSale" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full space-y-4">
+            <h3 class="text-sm font-bold text-slate-800 border-b pb-2">Registrar Venta</h3>
+            <form id="quickSaleForm" class="space-y-3">
+                <div><label class="text-xs text-slate-500 font-bold">ID Empresa</label><input type="number" id="qs_company" value="1" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div><label class="text-xs text-slate-500 font-bold">ID Cliente</label><input type="number" id="qs_client" value="1" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div><label class="text-xs text-slate-500 font-bold">ID Producto</label><input type="number" id="qs_product" value="1" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div><label class="text-xs text-slate-500 font-bold">Cantidad</label><input type="number" id="qs_qty" value="1" min="1" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div class="flex justify-end space-x-2 pt-2"><button type="button" onclick="closeModalSale()" class="bg-slate-200 text-slate-700 px-3 py-1.5 rounded text-xs font-bold">Cancelar</button><button type="submit" class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold">Guardar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalPurchase" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full space-y-4">
+            <h3 class="text-sm font-bold text-slate-800 border-b pb-2">Registrar Compra</h3>
+            <form id="quickPurchaseForm" class="space-y-3">
+                <div><label class="text-xs text-slate-500 font-bold">ID Empresa</label><input type="number" id="qp_company" value="1" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div><label class="text-xs text-slate-500 font-bold">ID Proveedor</label><input type="number" id="qp_supplier" value="1" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div><label class="text-xs text-slate-500 font-bold">ID Producto</label><input type="number" id="qp_product" value="1" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div><label class="text-xs text-slate-500 font-bold">Cantidad</label><input type="number" id="qp_qty" value="5" min="1" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div><label class="text-xs text-slate-500 font-bold">Costo Unitario (S/)</label><input type="number" step="0.01" id="qp_cost" value="15.00" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+                <div class="flex justify-end space-x-2 pt-2"><button type="button" onclick="closeModalPurchase()" class="bg-slate-200 text-slate-700 px-3 py-1.5 rounded text-xs font-bold">Cancelar</button><button type="submit" class="bg-emerald-600 text-white px-4 py-1.5 rounded text-xs font-bold">Guardar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalHr" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full space-y-4">
+            <h3 class="text-sm font-bold text-slate-800 border-b pb-2">Registrar Trabajador</h3>
+            <form id="quickHrForm" class="space-y-3">
+                <div><label class="text-xs text-slate-500 font-bold">Nombre Completo</label><input type="text" id="hr_name" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="text-xs text-slate-500 font-bold">DNI</label><input type="text" id="hr_doc" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+                    <div><label class="text-xs text-slate-500 font-bold">Sueldo (S/)</label><input type="number" step="0.01" id="hr_salary" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+                </div>
+                <div><label class="text-xs text-slate-500 font-bold">Puesto</label><input type="text" id="hr_position" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+                <div class="flex justify-end space-x-2 pt-2"><button type="button" onclick="closeModalHr()" class="bg-slate-200 text-slate-700 px-3 py-1.5 rounded text-xs font-bold">Cancelar</button><button type="submit" class="bg-rose-600 text-white px-4 py-1.5 rounded text-xs font-bold">Guardar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS DE CONTROL Y FILTRADO -->
+    <script>
+        let globalProducts = [];
+
+        function openModule(moduleKey) {
+            document.getElementById('viewLauncher').classList.add('hidden');
+            document.getElementById('viewWorkspace').classList.remove('hidden');
+            switchTab(moduleKey);
+        }
+
+        function showLauncher() {
+            document.getElementById('viewWorkspace').classList.add('hidden');
+            document.getElementById('viewLauncher').classList.remove('hidden');
+        }
+
+        function switchTab(tabKey) {
+            ['Sales', 'Purchases', 'Supply', 'Production', 'Hr', 'Finance', 'Analysis'].forEach(t => {
+                const el = document.getElementById('tab' + t);
+                const nav = document.getElementById('nav' + t);
+                if (el) el.classList.add('hidden');
+                if (nav) nav.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300";
+            });
+
+            // Mostrar u ocultar submenú de abastecimiento en el sidebar
+            const supplySubmenu = document.getElementById('supplySubmenu');
+            if (tabKey === 'supply') {
+                supplySubmenu.classList.remove('hidden');
+            } else {
+                supplySubmenu.classList.add('hidden');
+            }
+
+            const activeTab = document.getElementById('tab' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
+            const activeNav = document.getElementById('nav' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
+            if (activeTab) activeTab.classList.remove('hidden');
+            if (activeNav) activeNav.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold transition text-white bg-cyan-600";
+
+            if (tabKey === 'sales') loadSales();
+            if (tabKey === 'supply') { loadSupplyData(); filterSupply('all'); }
+            if (tabKey === 'hr') loadEmployees();
+            if (tabKey === 'finance') loadFinanceData();
+            if (tabKey === 'analysis') loadAnalysisData();
+        }
+
+        async function loadSales() {
+            const res = await fetch('/api/sales');
+            const sales = await res.json();
+            const tbody = document.getElementById('salesTableBody');
+            tbody.innerHTML = '';
+            sales.forEach(s => {
+                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-3 font-mono font-bold">#${s.sale_id}</td><td class="p-3">${s.company_id}</td><td class="p-3">${s.client_id}</td><td class="p-3 font-bold">S/ ${s.total_amount.toFixed(2)}</td><td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">Completado</span></td></tr>`;
+            });
+        }
+
+        async function loadSupplyData() {
+            try {
+                const res = await fetch('/api/products');
+                globalProducts = await res.json();
+                
+                let totalStock = 0;
+                let rawCount = 0;
+                let termCount = 0;
+
+                globalProducts.forEach(p => {
+                    totalStock += p.stock;
+                    if (p.type === 'raw') rawCount++;
+                    if (p.type === 'terminated') termCount++;
+                });
+
+                document.getElementById('supTotalStock').innerText = `${totalStock} Unidades`;
+                document.getElementById('supRawCount').innerText = `${rawCount} Ítems`;
+                document.getElementById('supTermCount').innerText = `${termCount} Ítems`;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function filterSupply(filterType) {
+            const tbody = document.getElementById('supplyTableBody');
+            const titleEl = document.getElementById('supplyTableTitle');
+            const headerTitle = document.getElementById('supplyHeaderTitle');
+            const headerDesc = document.getElementById('supplyHeaderDesc');
+            const cardsContainer = document.getElementById('supplyCardsContainer');
+            
+            tbody.innerHTML = '';
+            cardsContainer.style.display = 'grid';
+
+            let filtered = globalProducts;
+
+            if (filterType === 'all') {
+                headerTitle.innerText = "Abastecimiento - Almacén General";
+                headerDesc.innerText = "Inventario completo de insumos y productos terminados.";
+                titleEl.innerText = "Todos los Ítems del Almacén";
+            } else if (filterType === 'realtime') {
+                headerTitle.innerText = "Abastecimiento - Stock en Tiempo Real";
+                headerDesc.innerText = "Monitoreo en vivo de existencias actuales por SKU.";
+                titleEl.innerText = "Control de Stock en Tiempo Real";
+            } else if (filterType === 'raw') {
+                headerTitle.innerText = "Abastecimiento - Materias Primas";
+                headerDesc.innerText = "Insumos base utilizados para los procesos de manufactura.";
+                titleEl.innerText = "Listado de Materias Primas (Raw)";
+                filtered = globalProducts.filter(p => p.type === 'raw');
+            } else if (filterType === 'terminated') {
+                headerTitle.innerText = "Abastecimiento - Productos Terminados / Secundarios";
+                headerDesc.innerText = "Artículos listos para comercialización o ensamble secundario.";
+                titleEl.innerText = "Productos Terminados";
+                filtered = globalProducts.filter(p => p.type === 'terminated');
+            } else if (filterType === 'rotation') {
+                headerTitle.innerText = "Abastecimiento - Rotación de Productos";
+                headerDesc.innerText = "Análisis de velocidad de salida y rotación de stock.";
+                titleEl.innerText = "Métricas de Rotación de Inventario";
+                cardsContainer.style.display = 'none';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-slate-500">
+                            <div class="space-y-2">
+                                <p class="text-sm font-bold text-slate-800">📊 Estado de Rotación: Alta Eficiencia</p>
+                                <p class="text-xs">El flujo de materias primas hacia producción y la salida de productos terminados opera sin cuellos de botella.</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay registros en esta categoría.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const badgeType = p.type === 'raw' 
+                    ? '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold text-[10px]">Materia Prima (Raw)</span>' 
+                    : '<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold text-[10px]">Terminado</span>';
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-3 font-mono font-bold">${p.sku}</td>
+                        <td class="p-3 font-medium text-slate-800">${p.name}</td>
+                        <td class="p-3">${badgeType}</td>
+                        <td class="p-3 text-slate-600">S/ ${p.cost.toFixed(2)}</td>
+                        <td class="p-3 text-slate-600">S/ ${p.price.toFixed(2)}</td>
+                        <td class="p-3 font-black text-amber-600 text-sm">${p.stock} un.</td>
+                    </tr>`;
+            });
+        }
+
+        async function loadEmployees() {
+            const res = await fetch('/api/employees');
+            const employees = await res.json();
+            const tbody = document.getElementById('hrTableBody');
+            tbody.innerHTML = '';
+            let totalMonthly = 0;
+            employees.forEach(e => {
+                totalMonthly += e.salary;
+                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-3 font-medium">${e.full_name}</td><td class="p-3 font-mono">${e.document_number}</td><td class="p-3">${e.position}</td><td class="p-3 font-bold text-rose-600">S/ ${e.salary.toFixed(2)}</td><td class="p-3">${e.contract_type}</td><td class="p-3">${e.vacation_days} días</td></tr>`;
+            });
+            document.getElementById('totalWorkers').innerText = employees.length;
+            document.getElementById('totalPayroll').innerText = `S/ ${totalMonthly.toFixed(2)}`;
+            document.getElementById('annualPayroll').innerText = `S/ ${(totalMonthly * 12).toFixed(2)}`;
+        }
+
+        async function loadFinanceData() {
+            try {
+                const res = await fetch('/api/finance/report');
+                const data = await res.json();
+                document.getElementById('finIncome').innerText = `S/ ${data.total_income.toFixed(2)}`;
+                document.getElementById('finExpenses').innerText = `S/ ${data.total_expenses.toFixed(2)}`;
+                document.getElementById('finNet').innerText = `S/ ${data.net_profit.toFixed(2)}`;
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadAnalysisData() {
+            try {
+                const res = await fetch('/api/finance/projection');
+                const proj = await res.json();
+                document.getElementById('projectionContent').innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border">
+                        <div>
+                            <p class="text-slate-500 font-bold">Ingresos Mensuales Proyectados:</p>
+                            <p class="text-lg font-black text-blue-600">S/ ${proj.monthly_projected_income.toFixed(2)}</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-500 font-bold">Egresos Mensuales Proyectados:</p>
+                            <p class="text-lg font-black text-rose-600">S/ ${proj.monthly_projected_expenses.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 mt-2">
+                        <p class="text-emerald-800 font-bold">Utilidad Neta Anual Proyectada (x12):</p>
+                        <p class="text-2xl font-black text-emerald-700">S/ ${proj.annual_projected_net_profit.toFixed(2)}</p>
+                    </div>
+                `;
+            } catch (err) { console.error(err); }
+        }
+
+        async function executeProduction() {
+            const res = await fetch('/api/production/1/execute', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rounds: 1}) });
+            const data = await res.json();
+            const div = document.getElementById('productionResult');
+            if (res.ok) {
+                div.innerHTML = `<span class="text-green-600 font-bold">✅ ¡Producción ejecutada con éxito! Se descontaron materias primas y se aumentó el stock de productos terminados en almacén.</span>`;
+            } else {
+                div.innerHTML = `<span class="text-red-600 font-bold">❌ Error en producción: ${data.message}</span>`;
+            }
+        }
+
+        function openModalSale() { document.getElementById('modalSale').classList.remove('hidden'); }
+        function closeModalSale() { document.getElementById('modalSale').classList.add('hidden'); }
+        function openModalPurchase() { document.getElementById('modalPurchase').classList.remove('hidden'); }
+        function closeModalPurchase() { document.getElementById('modalPurchase').classList.add('hidden'); }
+        function openModalHr() { document.getElementById('modalHr').classList.remove('hidden'); }
+        function closeModalHr() { document.getElementById('modalHr').classList.add('hidden'); }
+
+        document.getElementById('quickSaleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { company_id: 1, client_id: 1, items: [{ product_id: 1, quantity: 1 }] };
+            const res = await fetch('/api/sales', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            if (res.ok) { closeModalSale(); loadSales(); alert('Venta registrada'); }
+        });
+
+        document.getElementById('quickPurchaseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { company_id: 1, supplier_id: 1, items: [{ product_id: 1, quantity: 10, unit_cost: 10 }] };
+            const res = await fetch('/api/purchases', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            if (res.ok) { closeModalPurchase(); alert('Compra registrada'); }
+        });
+
+        document.getElementById('quickHrForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { company_id: 1, full_name: document.getElementById('hr_name').value, document_number: document.getElementById('hr_doc').value, position: document.getElementById('hr_position').value, salary: parseFloat(document.getElementById('hr_salary').value), contract_type: 'Indefinido' };
+            const res = await fetch('/api/employees', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            if (res.ok) { closeModalHr(); loadEmployees(); alert('Trabajador registrado'); }
+        });
+    </script>
+</body>
+</html>
