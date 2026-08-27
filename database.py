@@ -3,26 +3,27 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Carga las variables de entorno
 load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# URL de conexión a PostgreSQL (reemplaza esto con tu URL de Neon o Supabase cuando la tengas)
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://usuario:contraseña@tu-servidor-postgres.com/tu_base",
+# Configuración avanzada del motor con reciclaje automático para la nube
+engine = create_engine(
+    DATABASE_URL, 
+    pool_pre_ping=True, 
+    pool_size=5, 
+    max_overflow=10,
+    pool_recycle=300,  # Recicla conexiones cada 5 minutos para evitar bloqueos fantasma
+    pool_timeout=10    # Libera el intento rápidamente si hay congestión temporal
 )
 
-# Configuración del motor de base de datos
-engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-
-# Función para obtener la sesión de base de datos en las peticiones
 def get_db():
-  db = SessionLocal()
-  try:
-    yield db
-  finally:
-    db.close()
+    """Generador seguro que garantiza el cierre de la sesión"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
