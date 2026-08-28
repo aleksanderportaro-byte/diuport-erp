@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Proyecciones | Diuport ERP{% endblock %}
+{% block page_title %}📈 Análisis y Proyección de Flujo de Caja{% endblock %}
+{% block page_desc %}Simulaciones a 30, 60 y 90 días calculadas con la data histórica de los 6 módulos.{% endblock %}
+{% block btn_new_color %}bg-purple-600 hover:bg-purple-700{% endblock %}
+{% block btn_upload_color %}bg-purple-700 hover:bg-purple-800{% endblock %}
+{% block btn_save_color %}bg-purple-600{% endblock %}
+
+{% block header_actions_left %}
+<div class="flex flex-wrap items-center gap-3">
+    <div class="flex bg-slate-100 rounded-lg p-0.5 overflow-x-auto no-scrollbar">
+        <button onclick="switchView('simulador')" id="tabSimuladorBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-white bg-purple-600">Flujo de Caja</button>
+        <button onclick="switchView('demanda')" id="tabDemandaBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-purple-600">Proyección de Demanda</button>
+        <button onclick="switchView('rotacion')" id="tabRotacionBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-purple-600">Rotación</button>
+    </div>
+    <button onclick="loadAll()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">🔄 Recalcular Proyección</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Vista Simulador de Flujo de Caja -->
+<div id="viewSimulador">
+<div id="loading" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center text-sm text-slate-500">Cargando motor predictivo...</div>
+
+<div id="projContent" class="hidden space-y-5">
+    <!-- Método -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <h3 class="text-sm font-bold text-slate-800 border-b pb-2 mb-3">🧮 Método de Cálculo</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                <span class="text-purple-600 font-bold uppercase text-[10px]">Promedio Ponderado Mensual</span>
+                <h4 id="m_weighted" class="text-lg font-black text-purple-700">S/ 0.00</h4>
+                <p class="text-[10px] text-slate-500 mt-1">Más peso a los meses recientes de ventas reales.</p>
+            </div>
+            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                <span class="text-indigo-600 font-bold uppercase text-[10px]">Tendencia Mensual (Regresión Lineal)</span>
+                <h4 id="m_trend" class="text-lg font-black text-indigo-700">S/ 0.00 / mes</h4>
+                <p class="text-[10px] text-slate-500 mt-1">Pendiente de crecimiento/decrecimiento estimada.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulación 30/60/90 días -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <h3 class="text-sm font-bold text-slate-800 border-b pb-2 mb-3">💵 Simulación de Flujo de Caja</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="cashCards"></div>
+    </div>
+
+    <!-- Proyección mensual y anual -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-800 border-b pb-2 mb-3">📅 Proyección Mensual</h3>
+            <div id="monthlyDetail" class="text-xs text-slate-600 space-y-2"></div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-800 border-b pb-2 mb-3">🗓️ Proyección Anual (x12)</h3>
+            <div id="annualDetail" class="text-xs text-slate-600 space-y-2"></div>
+        </div>
+    </div>
+
+    <!-- Data histórica -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b"><h3 class="text-xs font-bold text-slate-700 uppercase">📊 Data Histórica de los 6 Módulos</h3></div>
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr><th class="p-3">Métrica</th><th class="p-3">Valor</th></tr>
+            </thead>
+            <tbody id="histBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Serie mensual de ventas -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b"><h3 class="text-xs font-bold text-slate-700 uppercase">Serie Mensual de Ventas</h3></div>
+        <div id="seriesChart" class="p-5 overflow-x-auto"></div>
+    </div>
+</div>
+</div>
+
+<!-- Vista Proyección de Demanda -->
+<div id="viewDemanda" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+        <span class="text-4xl">📊</span>
+        <h3 class="text-sm font-bold text-slate-800 mt-3">Proyección de Demanda</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Estimación de demanda futura por producto, basada en el histórico de ventas y la tendencia de crecimiento del negocio.</p>
+        <p class="text-[10px] text-slate-400 mt-3">Disponible próximamente</p>
+    </div>
+</div>
+
+<!-- Vista Rotación -->
+<div id="viewRotacion" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+        <span class="text-4xl">🔄</span>
+        <h3 class="text-sm font-bold text-slate-800 mt-3">Rotación de Inventario</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Análisis de rotación de inventario: cuántas veces se repone y consume cada producto del almacén en el periodo.</p>
+        <p class="text-[10px] text-slate-400 mt-3">Disponible próximamente</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block modal_form %}
+<div class="text-xs text-slate-500">Este módulo es de análisis. Usa la data de los otros módulos para simular el flujo de caja.</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function fmt(n) { return 'S/ ' + Number(n || 0).toFixed(2); }
+
+function switchView(view) {
+    if (!['simulador','demanda','rotacion'].includes(view)) view = 'simulador';
+    ['simulador','demanda','rotacion'].forEach(v => {
+        const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+        if (el) el.classList.toggle('hidden', v !== view);
+    });
+    const btnMap = { simulador:'tabSimuladorBtn', demanda:'tabDemandaBtn', rotacion:'tabRotacionBtn' };
+    Object.entries(btnMap).forEach(([k,id]) => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-md text-xs font-bold ' + (k === view ? 'text-white bg-purple-600' : 'text-slate-500 hover:text-purple-600');
+    });
+    if (view === 'simulador') loadAll();
+}
+
+async function loadAll() {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('projContent').classList.add('hidden');
+    try {
+        const d = await api('/api/finance/projection');
+        const mes = d.proyeccion_mensual;
+        const anu = d.proyeccion_anual;
+
+        document.getElementById('m_weighted').innerText = fmt(d.metodo.promedio_ponderado);
+        document.getElementById('m_trend').innerText = fmt(d.metodo.tendencia_mensual) + ' / mes';
+
+        // Simulación 30/60/90 días (prorrateo mensual)
+        const cashCards = document.getElementById('cashCards');
+        const periods = [
+            { days: 30, factor: 1 },
+            { days: 60, factor: 2 },
+            { days: 90, factor: 3 },
+        ];
+        cashCards.innerHTML = periods.map(p => {
+            const ing = mes.ingresos_esperados * p.factor;
+            const egr = mes.egresos.total_egresos * p.factor;
+            const net = (mes.flujo_neto || 0) * p.factor;
+            const color = net >= 0 ? 'text-emerald-600' : 'text-rose-600';
+            return `<div class="bg-gradient-to-br ${net>=0?'from-emerald-50 to-white':'from-rose-50 to-white'} border-2 ${net>=0?'border-emerald-200':'border-rose-200'} rounded-xl p-4">
+                <span class="text-[10px] text-slate-400 font-bold uppercase">Proyección a ${p.days} días</span>
+                <h4 class="text-2xl font-black ${color} mt-1">${fmt(net)}</h4>
+                <div class="mt-3 text-[11px] text-slate-600 space-y-1">
+                    <div class="flex justify-between"><span>Ingresos</span><b class="text-blue-600">${fmt(ing)}</b></div>
+                    <div class="flex justify-between"><span>Egresos</span><b class="text-rose-600">${fmt(egr)}</b></div>
+                    <div class="flex justify-between border-t pt-1"><span>Flujo neto</span><b class="${color}">${fmt(net)}</b></div>
+                    <div class="flex justify-between"><span>Tendencia</span><b>${fmt((d.metodo.tendencia_mensual||0)*p.factor)}</b></div>
+                </div>
+            </div>`;
+        }).join('');
+
+        document.getElementById('monthlyDetail').innerHTML = `
+            <p class="flex justify-between border-b pb-1"><span>Ingresos esperados</span><b class="text-blue-600">${fmt(mes.ingresos_esperados)}</b></p>
+            <p class="flex justify-between"><span>Compras promedio</span><b>${fmt(mes.egresos.prom_compras)}</b></p>
+            <p class="flex justify-between"><span>Planilla RRHH</span><b>${fmt(mes.egresos.planilla_rrhh)}</b></p>
+            <p class="flex justify-between"><span>Gastos promedio</span><b>${fmt(mes.egresos.prom_gastos)}</b></p>
+            <p class="flex justify-between border-t pt-1"><span>Total egresos</span><b class="text-rose-600">${fmt(mes.egresos.total_egresos)}</b></p>
+            <p class="flex justify-between"><span>Flujo neto mensual</span><b class="${mes.flujo_neto>=0?'text-emerald-600':'text-rose-600'}">${fmt(mes.flujo_neto)}</b></p>
+            <p class="text-[10px] text-slate-400">Empleados activos: ${mes.empleados_activos}</p>`;
+
+        document.getElementById('annualDetail').innerHTML = `
+            <p class="flex justify-between border-b pb-1"><span>Ingresos proyectados</span><b class="text-blue-600">${fmt(anu.ingresos_proyectados)}</b></p>
+            <p class="flex justify-between"><span>Egresos proyectados</span><b class="text-rose-600">${fmt(anu.egresos_proyectados)}</b></p>
+            <p class="flex justify-between border-t pt-1"><span>Utilidad Neta Proyectada</span><b class="${anu.utilidad_neta_proyectada>=0?'text-emerald-600':'text-rose-600'} text-sm">${fmt(anu.utilidad_neta_proyectada)}</b></p>`;
+
+        const hist = d.data_historica;
+        const rows = [
+            ['Meses con actividad', hist.meses_con_actividad],
+            ['Total ventas brutas (histórico)', fmt(hist.total_ventas_brutas)],
+            ['Número de ventas', hist.num_ventas],
+            ['Producción total (unidades)', hist.produccion_total_unidades],
+            ['Costo de producción total', fmt(hist.costo_produccion_total)],
+            ['Valor de inventario', fmt(hist.valor_inventario)],
+            ['Planilla mensual (RRHH)', fmt(hist.planilla_mensual)],
+        ];
+        document.getElementById('histBody').innerHTML = rows.map(r => `<tr class="border-b hover:bg-slate-50"><td class="p-3 font-medium text-slate-700">${r[0]}</td><td class="p-3 font-bold">${r[1]}</td></tr>`).join('');
+
+        // Serie mensual de ventas (barras simples)
+        const series = hist.serie_ventas_mensual || [];
+        const chart = document.getElementById('seriesChart');
+        if (series.length === 0) {
+            chart.innerHTML = '<p class="text-slate-400 text-center">Sin ventas históricas aún.</p>';
+        } else {
+            const max = Math.max(...series.map(s => s.ingresos), 1);
+            chart.innerHTML = '<div class="flex items-end gap-3 min-w-max">' + series.map(s => `
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-slate-600">${fmt(s.ingresos)}</span>
+                    <div class="bg-purple-400 rounded-t" style="height:${Math.max((s.ingresos/max)*120, 8)}px;width:44px;"></div>
+                    <span class="text-[10px] text-slate-400 mt-1">${s.month}</span>
+                </div>`).join('') + '</div>';
+        }
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('projContent').classList.remove('hidden');
+    } catch (err) {
+        document.getElementById('loading').classList.add('hidden');
+        showToast(err.message, 'error');
+    }
+}
+
+switchView(new URLSearchParams(location.search).get('view') || 'simulador');
+</script>
+{% endblock %}

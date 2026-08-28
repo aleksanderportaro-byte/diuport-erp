@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}Abastecimiento | Diuport ERP{% endblock %}
+{% block page_title %}📦 Abastecimiento e Inventario{% endblock %}
+{% block page_desc %}Almacén general, materias primas y alertas de stock bajo mínimo.{% endblock %}
+{% block btn_new_color %}bg-amber-600 hover:bg-amber-700{% endblock %}
+{% block btn_upload_color %}bg-amber-700 hover:bg-amber-800{% endblock %}
+{% block btn_save_color %}bg-amber-600{% endblock %}
+
+{% block header_actions_left %}
+<div class="flex items-center gap-3">
+    <div class="flex bg-slate-100 rounded-lg p-0.5 overflow-x-auto no-scrollbar">
+        <button onclick="switchView('inventario')" id="tabInvBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-white bg-amber-600">Inventario</button>
+        <button onclick="switchView('materia')" id="tabMateriaBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-amber-600">Materia Prima</button>
+        <button onclick="switchView('terminados')" id="tabTermBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-amber-600">Productos Terminados</button>
+        <button onclick="switchView('alertas')" id="tabAlertBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-amber-600">Alertas de Stock</button>
+    </div>
+    <div class="hidden sm:grid grid-cols-2 gap-3">
+        <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+            <span class="text-[10px] text-amber-600 font-bold uppercase">Stock Total</span>
+            <h3 id="cardTotalStock" class="text-lg font-black text-amber-700">0</h3>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+            <span class="text-[10px] text-slate-500 font-bold uppercase">Ítems Registrados</span>
+            <h3 id="cardItemCount" class="text-lg font-black text-slate-700">0</h3>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Inventario general -->
+<div id="viewInventario" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-3 bg-slate-50 border-b"><h3 class="text-xs font-bold text-slate-700 uppercase">Inventario general</h3></div>
+    <table class="w-full text-left text-xs">
+        <thead class="bg-slate-100 border-b text-slate-600">
+            <tr>
+                <th class="p-3">SKU</th><th class="p-3">Descripción</th><th class="p-3">Tipo</th>
+                <th class="p-3">Stock Actual</th><th class="p-3">Costo (S/)</th><th class="p-3">Precio (S/)</th>
+                <th class="p-3 text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="bodyInventario"></tbody>
+    </table>
+</div>
+
+<!-- Materia Prima -->
+<div id="viewMateria" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-3 bg-slate-50 border-b"><h3 class="text-xs font-bold text-slate-700 uppercase">Materia prima</h3></div>
+    <table class="w-full text-left text-xs">
+        <thead class="bg-slate-100 border-b text-slate-600">
+            <tr>
+                <th class="p-3">SKU</th><th class="p-3">Descripción</th><th class="p-3">Tipo</th>
+                <th class="p-3">Stock Actual</th><th class="p-3">Costo (S/)</th><th class="p-3">Precio (S/)</th>
+                <th class="p-3 text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="bodyMateria"></tbody>
+    </table>
+</div>
+
+<!-- Productos Terminados -->
+<div id="viewTerminados" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-3 bg-slate-50 border-b"><h3 class="text-xs font-bold text-slate-700 uppercase">Productos terminados</h3></div>
+    <table class="w-full text-left text-xs">
+        <thead class="bg-slate-100 border-b text-slate-600">
+            <tr>
+                <th class="p-3">SKU</th><th class="p-3">Descripción</th><th class="p-3">Tipo</th>
+                <th class="p-3">Stock Actual</th><th class="p-3">Costo (S/)</th><th class="p-3">Precio (S/)</th>
+                <th class="p-3 text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="bodyTerminados"></tbody>
+    </table>
+</div>
+
+<!-- Alertas de Stock -->
+<div id="viewAlertas" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-3 bg-slate-50 border-b"><h3 class="text-xs font-bold text-slate-700 uppercase">⚠️ Alertas de stock bajo mínimo</h3></div>
+    <table class="w-full text-left text-xs">
+        <thead class="bg-slate-100 border-b text-slate-600">
+            <tr>
+                <th class="p-3">SKU</th><th class="p-3">Descripción</th><th class="p-3">Tipo</th>
+                <th class="p-3">Stock Actual</th><th class="p-3">Costo (S/)</th><th class="p-3">Precio (S/)</th>
+                <th class="p-3 text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="bodyAlertas"></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block modal_form %}
+<input type="hidden" id="f_id">
+<div class="grid grid-cols-2 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">SKU *</label><input type="text" id="f_sku" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+    <div><label class="text-xs text-slate-500 font-bold">Tipo *</label>
+        <select id="f_type" class="w-full p-2 border rounded text-xs bg-slate-50">
+            <option value="raw">Materia Prima (Raw)</option>
+            <option value="termined">Producto Terminado</option>
+        </select>
+    </div>
+</div>
+<div><label class="text-xs text-slate-500 font-bold">Descripción / Nombre *</label><input type="text" id="f_name" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+<div><label class="text-xs text-slate-500 font-bold">Descripción detallada</label><input type="text" id="f_description" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+<div class="grid grid-cols-3 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Stock *</label><input type="number" id="f_stock" value="0" min="0" step="1" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+    <div><label class="text-xs text-slate-500 font-bold">Costo (S/)</label><input type="number" id="f_cost" value="0" step="0.01" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+    <div><label class="text-xs text-slate-500 font-bold">Precio (S/)</label><input type="number" id="f_price" value="0" step="0.01" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let editingId = null;
+let currentView = 'inventario';
+
+function switchView(view) {
+    currentView = view;
+    if (!['inventario','materia','terminados','alertas'].includes(view)) view = 'inventario';
+    ['inventario','materia','terminados','alertas'].forEach(v => {
+        const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+        if (el) el.classList.toggle('hidden', v !== view);
+    });
+    const btnMap = { inventario:'tabInvBtn', materia:'tabMateriaBtn', terminados:'tabTermBtn', alertas:'tabAlertBtn' };
+    Object.entries(btnMap).forEach(([k,id]) => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-md text-xs font-bold ' + (k === view ? 'text-white bg-amber-600' : 'text-slate-500 hover:text-amber-600');
+    });
+    loadData();
+}
+
+function renderProducts(products, tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay registros.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = products.map(p => {
+        const typeBadge = p.type === 'raw'
+            ? '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold text-[10px]">Materia Prima</span>'
+            : '<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold text-[10px]">Terminado</span>';
+        const stockBadge = p.stock < 10
+            ? `<span class="text-amber-600 font-black">${p.stock} <span class="text-[9px]">⚠️</span></span>`
+            : `<span class="font-black text-slate-800">${p.stock}</span>`;
+        return `<tr class="border-b hover:bg-slate-50">
+            <td class="p-3 font-mono font-bold">${p.sku||'-'}</td>
+            <td class="p-3 font-medium text-slate-800">${p.name||'-'}</td>
+            <td class="p-3">${typeBadge}</td>
+            <td class="p-3">${stockBadge}</td>
+            <td class="p-3">S/ ${Number(p.cost||0).toFixed(2)}</td>
+            <td class="p-3">S/ ${Number(p.price||0).toFixed(2)}</td>
+            <td class="p-3 text-right whitespace-nowrap">
+                <button onclick='openEditModal(${JSON.stringify(p)})' class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded font-bold">✏️ Editar</button>
+                <button onclick='removeItem(${p.id})' class="text-red-600 hover:bg-red-50 px-2 py-1 rounded font-bold">🗑️ Eliminar</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function loadData() {
+    let all = [];
+    try { all = await api('/api/products'); } catch (e) { all = []; }
+    const raw = all.filter(p => p.type === 'raw');
+    const term = all.filter(p => p.type === 'termined');
+    const alertas = all.filter(p => p.stock < 10);
+
+    renderProducts(all, 'bodyInventario');
+    renderProducts(raw, 'bodyMateria');
+    renderProducts(term, 'bodyTerminados');
+    renderProducts(alertas, 'bodyAlertas');
+
+    let totalStock = 0;
+    all.forEach(p => totalStock += (p.stock || 0));
+    document.getElementById('cardItemCount').innerText = all.length;
+    document.getElementById('cardTotalStock').innerText = totalStock;
+}
+
+window.openEdit = function(p) {
+    editingId = p.id;
+    document.getElementById('modalTitle').innerText = 'Editar Producto #' + p.id;
+    document.getElementById('f_id').value = p.id;
+    document.getElementById('f_sku').value = p.sku || '';
+    document.getElementById('f_name').value = p.name || '';
+    document.getElementById('f_description').value = p.description || '';
+    document.getElementById('f_type').value = p.type;
+    document.getElementById('f_stock').value = p.stock;
+    document.getElementById('f_cost').value = p.cost;
+    document.getElementById('f_price').value = p.price;
+    openModal();
+};
+
+function resetForm() {
+    editingId = null;
+    document.getElementById('f_id').value = '';
+    document.getElementById('f_sku').value = '';
+    document.getElementById('f_name').value = '';
+    document.getElementById('f_description').value = '';
+    document.getElementById('f_type').value = 'raw';
+    document.getElementById('f_stock').value = '0';
+    document.getElementById('f_cost').value = '0';
+    document.getElementById('f_price').value = '0';
+    document.getElementById('modalTitle').innerText = 'Nuevo Registro';
+}
+
+// Sobreescribir openModal para resetear el formulario en "Nuevo"
+const _baseOpenModal = window.openModal;
+window.openModal = function() { resetForm(); _baseOpenModal(); };
+
+document.getElementById('modalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = {
+        sku: document.getElementById('f_sku').value,
+        name: document.getElementById('f_name').value,
+        description: document.getElementById('f_description').value,
+        type: document.getElementById('f_type').value,
+        stock: parseInt(document.getElementById('f_stock').value) || 0,
+        cost: parseFloat(document.getElementById('f_cost').value) || 0,
+        price: parseFloat(document.getElementById('f_price').value) || 0,
+    };
+    try {
+        if (editingId) {
+            await api('/api/products/' + editingId, 'PUT', body);
+            showToast('Producto actualizado');
+        } else {
+            await api('/api/products', 'POST', body);
+            showToast('Producto registrado');
+        }
+        closeModal(); loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+});
+
+async function removeItem(id) {
+    if (!confirm('¿Eliminar este producto?')) return;
+    try {
+        await api('/api/products/' + id, 'DELETE');
+        showToast('Producto eliminado');
+        loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const res = await fetch('/api/products/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showToast(`Importados ${data.created} registros` + (data.errors && data.errors.length ? ` (${data.errors.length} errores)` : ''));
+        loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+    input.value = '';
+}
+
+const initView = new URLSearchParams(location.search).get('view');
+switchView(initView || 'inventario');
+</script>
+{% endblock %}

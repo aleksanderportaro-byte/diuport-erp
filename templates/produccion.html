@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block title %}Producción | Diuport ERP{% endblock %}
+{% block page_title %}⚙️ Producción y Manufactura{% endblock %}
+{% block page_desc %}Órdenes de trabajo y recetas BOM (lote, producto, insumos usados).{% endblock %}
+{% block btn_new_color %}bg-indigo-600 hover:bg-indigo-700{% endblock %}
+{% block btn_upload_color %}bg-indigo-800 hover:bg-indigo-900{% endblock %}
+{% block btn_save_color %}bg-indigo-600{% endblock %}
+
+{% block header_actions_left %}
+<div class="flex items-center gap-3">
+    <div class="flex bg-slate-100 rounded-lg p-0.5">
+        <button onclick="switchView('orders')" id="tabOrdersBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-white bg-indigo-600">Órdenes de Trabajo</button>
+        <button onclick="switchView('bom')" id="tabBomBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700">Recetas BOM</button>
+        <button onclick="switchView('tiempos')" id="tabTiemposBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700">Tiempos y Mano de Obra</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Tarjetas de métricas superiores (datos reales) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-indigo-500 border-slate-200">
+        <span class="text-[10px] text-indigo-500 font-bold uppercase">Órdenes Totales</span>
+        <h3 id="cardOrders" class="text-xl font-black text-indigo-700 mt-1">0</h3>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-blue-500 border-slate-200">
+        <span class="text-[10px] text-blue-500 font-bold uppercase">En Producción</span>
+        <h3 id="cardActive" class="text-xl font-black text-blue-700 mt-1">0</h3>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-cyan-500 border-slate-200">
+        <span class="text-[10px] text-cyan-600 font-bold uppercase">Unidades Producidas</span>
+        <h3 id="cardProduced" class="text-xl font-black text-cyan-700 mt-1">0</h3>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-emerald-500 border-slate-200">
+        <span class="text-[10px] text-emerald-600 font-bold uppercase">Valor Producido (Costo)</span>
+        <h3 id="cardCost" class="text-xl font-black text-emerald-700 mt-1">S/ 0.00</h3>
+    </div>
+</div>
+
+<div id="viewOrders">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3">Lote</th>
+                    <th class="p-3">Producto</th>
+                    <th class="p-3">Rondas</th>
+                    <th class="p-3">Producido</th>
+                    <th class="p-3">Costo (S/)</th>
+                    <th class="p-3">Estado</th>
+                    <th class="p-3 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="viewBom" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-700 uppercase">Recetas / Listas de Materiales</h3>
+            <button onclick="addBomModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">➕ Receta</button>
+        </div>
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3">ID</th>
+                    <th class="p-3">Receta</th>
+                    <th class="p-3">Producto</th>
+                    <th class="p-3">Output/ronda</th>
+                    <th class="p-3">Insumos usados</th>
+                    <th class="p-3 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="bomBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="viewTiempos" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+        <span class="text-4xl">⏱️</span>
+        <h3 class="text-sm font-bold text-slate-800 mt-3">Tiempos y Mano de Obra</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Registro de tiempos de producción por lote, tiempos de máquina y asignación de mano de obra a cada receta.</p>
+        <p class="text-[10px] text-slate-400 mt-3">Disponible próximamente</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block modal_form %}
+<input type="hidden" id="f_id">
+<input type="hidden" id="f_bom_mode" value="order">
+<!-- Form Orden de Producción -->
+<div id="formOrder" class="grid grid-cols-1 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Receta BOM *</label>
+        <select id="f_bom_select" class="w-full p-2 border rounded text-xs bg-slate-50" required></select>
+    </div>
+    <div><label class="text-xs text-slate-500 font-bold">Rondas a producir *</label>
+        <input type="number" id="f_quantity" value="1" min="1" step="1" class="w-full p-2 border rounded text-xs bg-slate-50" required>
+    </div>
+</div>
+<!-- Form Receta BOM -->
+<div id="formBom" class="hidden grid grid-cols-1 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Producto a fabricar *</label>
+        <select id="b_output_product" class="w-full p-2 border rounded text-xs bg-slate-50" required></select>
+    </div>
+    <div><label class="text-xs text-slate-500 font-bold">Nombre de la receta *</label>
+        <input type="text" id="b_name" class="w-full p-2 border rounded text-xs bg-slate-50" required>
+    </div>
+    <div><label class="text-xs text-slate-500 font-bold">Output por ronda</label>
+        <input type="number" id="b_output_qty" value="1" min="1" step="1" class="w-full p-2 border rounded text-xs bg-slate-50">
+    </div>
+    <div><label class="text-xs text-slate-500 font-bold">Insumos (SKU:cantidad por línea)</label>
+        <textarea id="b_lines" rows="3" placeholder="MP001:2&#10;MP002:1" class="w-full p-2 border rounded text-xs bg-slate-50 font-mono" required></textarea>
+        <p class="text-[10px] text-slate-400">Un insumo por línea, formato SKU:cantidad. Solo materias primas.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let editingId = null;
+let boms = [];
+let currentView = 'orders';
+
+async function loadBoms() {
+    boms = await api('/api/bom');
+    const sel = document.getElementById('f_bom_select');
+    sel.innerHTML = boms.map(b => `<option value="${b.id}">#${b.id} ${b.name||''}</option>`).join('');
+    renderBoms();
+}
+
+async function populateProductSelects() {
+    const products = await api('/api/products?type=termined');
+    document.getElementById('b_output_product').innerHTML = '<option value="">— Seleccionar —</option>' + products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+}
+
+async function loadData() {
+    const orders = await api('/api/production');
+
+    // Métricas superiores
+    const completed = orders.filter(o => (o.status || 'pending') === 'completed');
+    document.getElementById('cardOrders').innerText = orders.length;
+    document.getElementById('cardActive').innerText = orders.filter(o => ((o.status || 'pending') !== 'completed') && ((o.status || 'pending') !== 'cancelled')).length;
+    document.getElementById('cardProduced').innerText = completed.reduce((a, o) => a + (o.produced_quantity || 0), 0);
+    document.getElementById('cardCost').innerText = 'S/ ' + completed.reduce((a, o) => a + (o.total_cost || 0), 0).toFixed(2);
+
+    const tbody = document.getElementById('ordersBody');
+    if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay órdenes de producción.</td></tr>';
+        return;
+    }
+    const stBadge = { pending: 'bg-slate-200 text-slate-700', in_progress: 'bg-blue-100 text-blue-800', completed: 'bg-emerald-100 text-emerald-800', cancelled: 'bg-red-100 text-red-700' };
+    tbody.innerHTML = orders.map(o => {
+        const st = o.status || 'pending';
+        return `<tr class="border-b hover:bg-slate-50">
+            <td class="p-3 font-mono font-bold">#${o.id}</td>
+            <td class="p-3 font-medium text-slate-800">${o.output_product||'—'}</td>
+            <td class="p-3">${o.quantity}</td>
+            <td class="p-3">${o.produced_quantity||0}</td>
+            <td class="p-3 font-bold">S/ ${Number(o.total_cost||0).toFixed(2)}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded font-bold text-[10px] ${stBadge[st]||''}">${st}</span></td>
+            <td class="p-3 text-right whitespace-nowrap">
+                ${st !== 'completed' ? `<button onclick='executeOrder(${o.id})' class="text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded font-bold">⚙️ Ejecutar</button>` : ''}
+                <button onclick='removeOrder(${o.id})' class="text-red-600 hover:bg-red-50 px-2 py-1 rounded font-bold">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function renderBoms() {
+    const tbody = document.getElementById('bomBody');
+    if (boms.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay recetas BOM.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = boms.map(b => {
+        const insumos = b.lines.map(l => `${l.product_name||'?'} (x${l.quantity})`).join(', ') || '—';
+        return `<tr class="border-b hover:bg-slate-50">
+            <td class="p-3 font-mono font-bold">#${b.id}</td>
+            <td class="p-3 font-medium text-slate-800">${b.name||'—'}</td>
+            <td class="p-3">${b.output_product_name||'—'}</td>
+            <td class="p-3">${b.output_quantity}</td>
+            <td class="p-3 text-slate-600">${insumos}</td>
+            <td class="p-3 text-right whitespace-nowrap">
+                <button onclick='openEditBom(${JSON.stringify(b)})' class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded font-bold">✏️</button>
+                <button onclick='removeBom(${b.id})' class="text-red-600 hover:bg-red-50 px-2 py-1 rounded font-bold">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function switchView(view) {
+    currentView = view;
+    ['orders','bom','tiempos'].forEach(v => {
+        const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+        if (el) el.classList.toggle('hidden', v !== view);
+    });
+    const btnMap = { orders:'tabOrdersBtn', bom:'tabBomBtn', tiempos:'tabTiemposBtn' };
+    Object.entries(btnMap).forEach(([k,id]) => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-md text-xs font-bold ' + (k === view ? 'text-white bg-indigo-600' : 'text-slate-500 hover:text-slate-700');
+    });
+    if (view === 'bom') loadBoms();
+}
+
+function setBomMode(mode) {
+    document.getElementById('f_bom_mode').value = mode;
+    document.getElementById('formOrder').classList.toggle('hidden', mode !== 'order');
+    document.getElementById('formBom').classList.toggle('hidden', mode !== 'bom');
+}
+
+function resetForm() {
+    editingId = null;
+    document.getElementById('f_id').value = '';
+    document.getElementById('f_quantity').value = '1';
+    document.getElementById('b_name').value = '';
+    document.getElementById('b_output_product').value = '';
+    document.getElementById('b_output_qty').value = '1';
+    document.getElementById('b_lines').value = '';
+}
+
+function addBomModal() {
+    resetForm(); setBomMode('bom');
+    document.getElementById('modalTitle').innerText = 'Nueva Receta BOM';
+    openModal();
+}
+
+const _baseOpenModal = window.openModal;
+window.openModal = function() {
+    resetForm();
+    if (currentView === 'bom') { setBomMode('bom'); document.getElementById('modalTitle').innerText = 'Nueva Receta BOM'; }
+    else { setBomMode('order'); document.getElementById('modalTitle').innerText = 'Nueva Orden de Producción'; }
+    _baseOpenModal();
+};
+
+function openEditBom(b) {
+    editingId = b.id;
+    document.getElementById('f_id').value = b.id;
+    setBomMode('bom');
+    document.getElementById('b_name').value = b.name || '';
+    // líneas
+    const lines = b.lines.map(l => `${l.product_id}:${l.quantity}`).join('\n');
+    document.getElementById('b_lines').value = lines;
+    document.getElementById('b_output_qty').value = b.output_quantity;
+    document.getElementById('modalTitle').innerText = 'Editar Receta #' + b.id;
+    openModal();
+}
+
+document.getElementById('modalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        if (document.getElementById('f_bom_mode').value === 'bom') {
+            // Convertir líneas SKU:qty -> product_id
+            const rawText = document.getElementById('b_lines').value;
+            const rawProducts = await api('/api/products?type=raw');
+            const skuToId = {};
+            rawProducts.forEach(p => skuToId[p.sku] = p.id);
+            const lines = [];
+            rawText.split('\n').forEach(line => {
+                line = line.trim();
+                if (!line) return;
+                const [sku, qty] = line.split(':');
+                if (!skuToId[sku]) throw new Error('SKU no encontrado: ' + sku);
+                lines.push({ product_id: skuToId[sku], quantity: parseFloat(qty) || 1 });
+            });
+            const body = {
+                company_id: 1,
+                output_product_id: parseInt(document.getElementById('b_output_product').value),
+                name: document.getElementById('b_name').value,
+                output_quantity: parseInt(document.getElementById('b_output_qty').value) || 1,
+                lines,
+            };
+            if (editingId) {
+                await api('/api/bom/' + editingId, 'PUT', { name: body.name, output_quantity: body.output_quantity });
+                showToast('Receta actualizada');
+            } else {
+                await api('/api/bom', 'POST', body);
+                showToast('Receta registrada');
+            }
+            closeModal(); loadBoms();
+        } else {
+            const bom_id = parseInt(document.getElementById('f_bom_select').value);
+            const quantity = parseInt(document.getElementById('f_quantity').value) || 1;
+            await api('/api/production', 'POST', { company_id: 1, bom_id, quantity });
+            showToast('Orden de producción creada');
+            closeModal(); loadData();
+        }
+    } catch (err) { showToast(err.message, 'error'); }
+});
+
+async function executeOrder(id) {
+    try {
+        await api('/api/production/' + id + '/execute', 'POST', { rounds: 1 });
+        showToast('✅ Producción ejecutada');
+        loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+async function removeOrder(id) {
+    if (!confirm('¿Eliminar orden de producción?')) return;
+    try { await api('/api/production/' + id, 'DELETE'); showToast('Orden eliminada'); loadData(); }
+    catch (err) { showToast(err.message, 'error'); }
+}
+async function removeBom(id) {
+    if (!confirm('¿Eliminar receta BOM?')) return;
+    try { await api('/api/bom/' + id, 'DELETE'); showToast('Receta eliminada'); loadBoms(); }
+    catch (err) { showToast(err.message, 'error'); }
+}
+
+async function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        if (currentView === 'bom') {
+            const res = await fetch('/api/bom/upload', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message);
+            showToast(`Importadas ${data.created} recetas` + (data.errors && data.errors.length ? ` (${data.errors.length} errores)` : ''));
+            loadBoms();
+        } else {
+            showToast('Para importar recetas usa la vista "Recetas BOM"', 'error');
+        }
+    } catch (err) { showToast(err.message, 'error'); }
+    input.value = '';
+}
+
+(async () => {
+    await Promise.all([loadBoms(), populateProductSelects()]);
+    loadData();
+    const v = new URLSearchParams(location.search).get('view');
+    if (v && ['bom','tiempos'].includes(v)) switchView(v);
+})();
+</script>
+{% endblock %}

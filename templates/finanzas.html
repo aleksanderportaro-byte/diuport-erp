@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}Finanzas | Diuport ERP{% endblock %}
+{% block page_title %}💰 Administración y Finanzas{% endblock %}
+{% block page_desc %}Cuentas por cobrar, cuentas por pagar y gastos operativos.{% endblock %}
+{% block btn_new_color %}bg-teal-600 hover:bg-teal-700{% endblock %}
+{% block btn_upload_color %}bg-teal-700 hover:bg-teal-800{% endblock %}
+{% block btn_save_color %}bg-teal-600{% endblock %}
+
+{% block header_actions_left %}
+<div class="flex bg-slate-100 rounded-lg p-0.5">
+    <button onclick="switchView('report')" id="tabReportBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-white bg-teal-600">Reporte</button>
+    <button onclick="switchView('receivables')" id="tabRecvBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500">CxC</button>
+    <button onclick="switchView('payables')" id="tabPayBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500">CxP</button>
+    <button onclick="switchView('expenses')" id="tabExpBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500">Gastos</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- REPORTE -->
+<div id="viewReport">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] text-blue-500 font-bold uppercase">Ingresos Totales (Ventas)</span>
+            <h3 id="r_income" class="text-xl font-black text-blue-600 mt-1">S/ 0.00</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] text-rose-500 font-bold uppercase">Egresos (Compras+Planilla+Gastos)</span>
+            <h3 id="r_expenses" class="text-xl font-black text-rose-600 mt-1">S/ 0.00</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] text-emerald-500 font-bold uppercase">Resultado Neto</span>
+            <h3 id="r_net" class="text-xl font-black text-emerald-600 mt-1">S/ 0.00</h3>
+        </div>
+    </div>
+    <div id="reportDetail" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 text-xs text-slate-600 space-y-2"></div>
+</div>
+
+<!-- CUENTAS POR COBRAR -->
+<div id="viewReceivables" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr><th class="p-3">Concepto</th><th class="p-3">Cliente</th><th class="p-3">Monto</th><th class="p-3">Cobrado</th><th class="p-3">Saldo</th><th class="p-3">Estado</th><th class="p-3 text-right">Acción</th></tr>
+            </thead>
+            <tbody id="recvBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- CUENTAS POR PAGAR -->
+<div id="viewPayables" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr><th class="p-3">Concepto</th><th class="p-3">Proveedor</th><th class="p-3">Monto</th><th class="p-3">Pagado</th><th class="p-3">Saldo</th><th class="p-3">Estado</th><th class="p-3 text-right">Acción</th></tr>
+            </thead>
+            <tbody id="payBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- GASTOS -->
+<div id="viewExpenses" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-700 uppercase">Gastos Operativos</h3>
+            <button onclick="addExpenseModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">➕ Gasto</button>
+        </div>
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr><th class="p-3">Concepto</th><th class="p-3">Tipo</th><th class="p-3">Descripción</th><th class="p-3">Monto (S/)</th><th class="p-3">Fecha</th><th class="p-3 text-right">Acciones</th></tr>
+            </thead>
+            <tbody id="expBody"></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block modal_form %}
+<input type="hidden" id="f_id">
+<input type="hidden" id="f_action_type" value="expense">
+<div id="formExpense" class="grid grid-cols-1 gap-2">
+    <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-xs text-slate-500 font-bold">Concepto / Categoría *</label><input type="text" id="e_category" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+        <div><label class="text-xs text-slate-500 font-bold">Tipo</label>
+            <select id="e_type" class="w-full p-2 border rounded text-xs bg-slate-50">
+                <option value="egreso">Egreso</option>
+            </select>
+        </div>
+    </div>
+    <div><label class="text-xs text-slate-500 font-bold">Descripción</label><input type="text" id="e_description" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+    <div><label class="text-xs text-slate-500 font-bold">Monto (S/) *</label><input type="number" id="e_amount" value="0" min="0" step="0.01" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+</div>
+<div id="formPayment" class="hidden grid grid-cols-1 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold" id="paymentLabel">Monto a registrar (S/)</label>
+        <input type="number" id="p_amount" value="0" min="0" step="0.01" class="w-full p-2 border rounded text-xs bg-slate-50">
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentView = 'report';
+let recvStore = [], payStore = [];
+
+function switchView(view) {
+    currentView = view;
+    ['report','receivables','payables','expenses'].forEach(v => {
+        document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1)).classList.toggle('hidden', v !== view);
+    });
+    const btnMap = { report:'tabReportBtn', receivables:'tabRecvBtn', payables:'tabPayBtn', expenses:'tabExpBtn' };
+    Object.entries(btnMap).forEach(([k,id]) => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-md text-xs font-bold ' + (k === view ? 'text-white bg-teal-600' : 'text-slate-500');
+    });
+    if (view === 'receivables') loadReceivables();
+    if (view === 'payables') loadPayables();
+    if (view === 'expenses') loadExpenses();
+}
+
+async function loadReport() {
+    try {
+        const d = await api('/api/finance/report');
+        document.getElementById('r_income').innerText = 'S/ ' + Number(d.ingresos.total_ingresos).toFixed(2);
+        document.getElementById('r_expenses').innerText = 'S/ ' + Number(d.egresos.total_egresos).toFixed(2);
+        document.getElementById('r_net').innerText = 'S/ ' + Number(d.resultado_neto).toFixed(2);
+        const color = d.tipo_resultado === 'utilidad' ? 'text-emerald-600' : d.tipo_resultado === 'perdida' ? 'text-rose-600' : 'text-slate-600';
+        document.getElementById('reportDetail').innerHTML = `
+            <p class="font-bold text-slate-700 border-b pb-1">Detalle de Egresos</p>
+            <p>• Cuentas por pagar (Compras): <b>S/ ${Number(d.egresos.cuentas_por_pagar_compras).toFixed(2)}</b></p>
+            <p>• Planilla RRHH (mensual): <b>S/ ${Number(d.egresos.planilla_rrhh).toFixed(2)}</b></p>
+            <p>• Gastos operativos: <b>S/ ${Number(d.egresos.gastos_operativos).toFixed(2)}</b></p>
+            <p class="pt-1"><b class="${color}">${d.tipo_resultado.toUpperCase()}</b> — S/ ${Number(Math.abs(d.resultado_neto)).toFixed(2)}</p>`;
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function loadReceivables() {
+    recvStore = await api('/api/receivables');
+    const tbody = document.getElementById('recvBody');
+    if (recvStore.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay cuentas por cobrar.</td></tr>';
+        return;
+    }
+    const badge = s => s.status === 'paid' ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">Pagado</span>' : s.status === 'partial' ? '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold text-[10px]">Parcial</span>' : '<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">Pendiente</span>';
+    tbody.innerHTML = recvStore.map(r => `<tr class="border-b hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">Venta #${r.sale_order_id}</td>
+        <td class="p-3">${r.client_name||'—'}</td>
+        <td class="p-3 font-bold">S/ ${Number(r.amount).toFixed(2)}</td>
+        <td class="p-3">S/ ${Number(r.amount_received).toFixed(2)}</td>
+        <td class="p-3 font-bold text-teal-700">S/ ${Number(r.balance).toFixed(2)}</td>
+        <td class="p-3">${badge(r)}</td>
+        <td class="p-3 text-right">${r.status !== 'paid' ? `<button onclick='collectItem(${r.id})' class="text-teal-600 hover:bg-teal-50 px-2 py-1 rounded font-bold">💵 Cobrar</button>` : '—'}</td>
+    </tr>`).join('');
+}
+
+async function loadPayables() {
+    payStore = await api('/api/payables');
+    const tbody = document.getElementById('payBody');
+    if (payStore.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay cuentas por pagar.</td></tr>';
+        return;
+    }
+    const badge = s => s.status === 'paid' ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">Pagado</span>' : s.status === 'partial' ? '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold text-[10px]">Parcial</span>' : '<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">Pendiente</span>';
+    tbody.innerHTML = payStore.map(p => `<tr class="border-b hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">Compra #${p.purchase_order_id}</td>
+        <td class="p-3">${p.supplier_name||'—'}</td>
+        <td class="p-3 font-bold">S/ ${Number(p.amount).toFixed(2)}</td>
+        <td class="p-3">S/ ${Number(p.amount_paid).toFixed(2)}</td>
+        <td class="p-3 font-bold text-rose-700">S/ ${Number(p.balance).toFixed(2)}</td>
+        <td class="p-3">${badge(p)}</td>
+        <td class="p-3 text-right">${p.status !== 'paid' ? `<button onclick='payItem(${p.id})' class="text-rose-600 hover:bg-rose-50 px-2 py-1 rounded font-bold">💸 Pagar</button>` : '—'}</td>
+    </tr>`).join('');
+}
+
+async function loadExpenses() {
+    const expenses = await api('/api/expenses');
+    const tbody = document.getElementById('expBody');
+    if (expenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay gastos registrados.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = expenses.map(x => `<tr class="border-b hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">${x.category}</td>
+        <td class="p-3"><span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-bold text-[10px]">Egreso</span></td>
+        <td class="p-3">${x.description||'—'}</td>
+        <td class="p-3 font-bold">S/ ${Number(x.amount).toFixed(2)}</td>
+        <td class="p-3">${x.expense_date ? new Date(x.expense_date).toLocaleDateString('es-PE') : '—'}</td>
+        <td class="p-3 text-right whitespace-nowrap">
+            <button onclick='openEditExpense(${JSON.stringify(x)})' class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded font-bold">✏️</button>
+            <button onclick='removeExpense(${x.id})' class="text-red-600 hover:bg-red-50 px-2 py-1 rounded font-bold">🗑️</button>
+        </td>
+    </tr>`).join('');
+}
+
+function addExpenseModal() {
+    resetForm();
+    document.getElementById('f_action_type').value = 'expense';
+    document.getElementById('formExpense').classList.remove('hidden');
+    document.getElementById('formPayment').classList.add('hidden');
+    document.getElementById('modalTitle').innerText = 'Nuevo Gasto';
+    openModal();
+}
+
+// Registrar pago/cobro
+let paymentMode = null, paymentId = null;
+function collectItem(id) { paymentMode = 'collect'; paymentId = id; resetForm(); document.getElementById('f_action_type').value = 'payment'; document.getElementById('formExpense').classList.add('hidden'); document.getElementById('formPayment').classList.remove('hidden'); const r = recvStore.find(x => x.id === id); document.getElementById('paymentLabel').innerText = 'Monto a cobrar (saldo S/ ' + Number(r.balance).toFixed(2) + ')'; document.getElementById('modalTitle').innerText = 'Cobrar Cuenta por Cobrar'; openModal(); }
+function payItem(id) { paymentMode = 'pay'; paymentId = id; resetForm(); document.getElementById('f_action_type').value = 'payment'; document.getElementById('formExpense').classList.add('hidden'); document.getElementById('formPayment').classList.remove('hidden'); const p = payStore.find(x => x.id === id); document.getElementById('paymentLabel').innerText = 'Monto a pagar (saldo S/ ' + Number(p.balance).toFixed(2) + ')'; document.getElementById('modalTitle').innerText = 'Pagar Cuenta por Pagar'; openModal(); }
+
+function resetForm() {
+    document.getElementById('f_id').value = '';
+    document.getElementById('e_category').value = '';
+    document.getElementById('e_description').value = '';
+    document.getElementById('e_amount').value = '0';
+    document.getElementById('p_amount').value = '0';
+    document.getElementById('modalTitle').innerText = 'Nuevo Registro';
+}
+
+function openEditExpense(x) {
+    resetForm();
+    document.getElementById('f_action_type').value = 'expense';
+    document.getElementById('f_id').value = x.id;
+    document.getElementById('formExpense').classList.remove('hidden');
+    document.getElementById('formPayment').classList.add('hidden');
+    document.getElementById('e_category').value = x.category;
+    document.getElementById('e_description').value = x.description || '';
+    document.getElementById('e_amount').value = x.amount;
+    document.getElementById('modalTitle').innerText = 'Editar Gasto #' + x.id;
+    openModal();
+}
+
+const _baseOpenModal = window.openModal;
+window.openModal = function() {
+    resetForm();
+    document.getElementById('f_action_type').value = 'expense';
+    document.getElementById('formExpense').classList.remove('hidden');
+    document.getElementById('formPayment').classList.add('hidden');
+    document.getElementById('modalTitle').innerText = 'Nuevo Gasto';
+    _baseOpenModal();
+};
+
+document.getElementById('modalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const actionType = document.getElementById('f_action_type').value;
+    try {
+        if (actionType === 'expense') {
+            const id = document.getElementById('f_id').value;
+            const body = {
+                category: document.getElementById('e_category').value,
+                description: document.getElementById('e_description').value,
+                amount: parseFloat(document.getElementById('e_amount').value) || 0,
+            };
+            if (id) { await api('/api/expenses/' + id, 'PUT', body); showToast('Gasto actualizado'); }
+            else { body.company_id = 1; await api('/api/expenses', 'POST', body); showToast('Gasto registrado'); }
+            closeModal(); loadExpenses(); loadReport();
+        } else {
+            const amount = parseFloat(document.getElementById('p_amount').value) || 0;
+            if (paymentMode === 'collect') await api('/api/receivables/' + paymentId + '/collect', 'POST', { amount });
+            else await api('/api/payables/' + paymentId + '/pay', 'POST', { amount });
+            showToast('Movimiento registrado');
+            closeModal(); switchView(paymentMode === 'collect' ? 'receivables' : 'payables'); loadReport();
+            paymentMode = null;
+        }
+    } catch (err) { showToast(err.message, 'error'); }
+});
+
+async function removeExpense(id) {
+    if (!confirm('¿Eliminar gasto?')) return;
+    try { await api('/api/expenses/' + id, 'DELETE'); showToast('Gasto eliminado'); loadExpenses(); loadReport(); }
+    catch (err) { showToast(err.message, 'error'); }
+}
+
+async function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file || currentView !== 'expenses') { showToast('Cambia a la vista "Gastos" para importar', 'error'); input.value=''; return; }
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const res = await fetch('/api/expenses/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showToast(`Importados ${data.created} gastos` + (data.errors && data.errors.length ? ` (${data.errors.length} errores)` : ''));
+        loadExpenses(); loadReport();
+    } catch (err) { showToast(err.message, 'error'); }
+    input.value = '';
+}
+
+const initView = new URLSearchParams(location.search).get('view');
+if (initView && ['receivables','payables','expenses'].includes(initView)) switchView(initView);
+else loadReport();
+</script>
+{% endblock %}

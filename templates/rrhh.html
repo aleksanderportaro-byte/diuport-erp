@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+{% block title %}RRHH | Diuport ERP{% endblock %}
+{% block page_title %}👔 Recursos Humanos y Planilla{% endblock %}
+{% block page_desc %}Personal, contratos y vacaciones. La planilla activa alimenta los gastos de Finanzas.{% endblock %}
+{% block btn_new_color %}bg-rose-600 hover:bg-rose-700{% endblock %}
+{% block btn_upload_color %}bg-rose-700 hover:bg-rose-800{% endblock %}
+{% block btn_save_color %}bg-rose-600{% endblock %}
+
+{% block header_actions_left %}
+<div class="flex items-center gap-3">
+    <div class="flex bg-slate-100 rounded-lg p-0.5 overflow-x-auto no-scrollbar">
+        <button onclick="switchView('personal')" id="tabPersonalBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-white bg-rose-600">Personal</button>
+        <button onclick="switchView('contratos')" id="tabContratosBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-rose-600">Contratos</button>
+        <button onclick="switchView('puestos')" id="tabPuestosBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-rose-600">Puestos</button>
+        <button onclick="switchView('vacaciones')" id="tabVacBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-rose-600">Vacaciones</button>
+    </div>
+    <div class="hidden sm:grid grid-cols-2 gap-3">
+        <div class="bg-rose-50 border border-rose-200 rounded-lg px-3 py-1.5">
+            <span class="text-[10px] text-rose-600 font-bold uppercase">Planilla Mensual</span>
+            <h3 id="cardPayroll" class="text-lg font-black text-rose-700">S/ 0.00</h3>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+            <span class="text-[10px] text-slate-500 font-bold uppercase">Colaboradores</span>
+            <h3 id="cardWorkers" class="text-lg font-black text-slate-700">0</h3>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Vista Personal -->
+<div id="viewPersonal">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-700 uppercase">Registro de personal</h3>
+            <span id="personalCount" class="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-bold">0</span>
+        </div>
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3">Colaborador</th>
+                    <th class="p-3">DNI</th>
+                    <th class="p-3">Puesto</th>
+                    <th class="p-3">Sueldo (S/)</th>
+                    <th class="p-3">Contrato</th>
+                    <th class="p-3">Vacaciones</th>
+                    <th class="p-3">Estado</th>
+                    <th class="p-3 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Vista Contratos -->
+<div id="viewContratos" class="hidden space-y-4">
+    <div id="contratosCards" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b"><h3 class="text-xs font-bold text-slate-700 uppercase">Detalle de contratos</h3></div>
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3">Colaborador</th>
+                    <th class="p-3">Puesto</th>
+                    <th class="p-3">Tipo de Contrato</th>
+                    <th class="p-3">Inicio</th>
+                    <th class="p-3">Fin</th>
+                    <th class="p-3">Estado</th>
+                </tr>
+            </thead>
+            <tbody id="contratosBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Vista Puestos -->
+<div id="viewPuestos" class="hidden">
+    <div id="puestosCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</div>
+
+<!-- Vista Vacaciones -->
+<div id="viewVacaciones" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b"><h3 class="text-xs font-bold text-slate-700 uppercase">Control de vacaciones</h3></div>
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3">Colaborador</th>
+                    <th class="p-3">DNI</th>
+                    <th class="p-3">Puesto</th>
+                    <th class="p-3">Días usados</th>
+                    <th class="p-3">Días disponibles</th>
+                    <th class="p-3">Estado</th>
+                    <th class="p-3 text-right">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="vacacionesBody"></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block modal_form %}
+<input type="hidden" id="f_id">
+<div class="grid grid-cols-2 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Nombre completo *</label><input type="text" id="f_name" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+    <div><label class="text-xs text-slate-500 font-bold">DNI *</label><input type="text" id="f_doc" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Puesto *</label><input type="text" id="f_position" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+    <div><label class="text-xs text-slate-500 font-bold">Sueldo (S/) *</label><input type="number" id="f_salary" value="0" min="0" step="0.01" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Tipo de Contrato</label>
+        <select id="f_contract" class="w-full p-2 border rounded text-xs bg-slate-50">
+            <option>Indefinido</option>
+            <option>Plazo Fijo</option>
+            <option>Honorarios</option>
+        </select>
+    </div>
+    <div><label class="text-xs text-slate-500 font-bold">Estado</label>
+        <select id="f_status" class="w-full p-2 border rounded text-xs bg-slate-50">
+            <option value="active">Activo</option>
+            <option value="terminated">Cesado</option>
+        </select>
+    </div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Inicio contrato</label><input type="text" id="f_start" placeholder="YYYY-MM-DD" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+    <div><label class="text-xs text-slate-500 font-bold">Fin contrato</label><input type="text" id="f_end" placeholder="YYYY-MM-DD" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let editingId = null;
+let employeesStore = [];
+let currentView = 'personal';
+const stBadge = e => e.status === 'active'
+    ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">Activo</span>'
+    : '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold text-[10px]">Cesado</span>';
+
+function switchView(view) {
+    if (!['personal','contratos','puestos','vacaciones'].includes(view)) view = 'personal';
+    currentView = view;
+    ['personal','contratos','puestos','vacaciones'].forEach(v => {
+        const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+        if (el) el.classList.toggle('hidden', v !== view);
+    });
+    const btnMap = { personal:'tabPersonalBtn', contratos:'tabContratosBtn', puestos:'tabPuestosBtn', vacaciones:'tabVacBtn' };
+    Object.entries(btnMap).forEach(([k,id]) => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-md text-xs font-bold ' + (k === view ? 'text-white bg-rose-600' : 'text-slate-500 hover:text-rose-600');
+    });
+    if (!['personal'].includes(view)) renderDerived(view);
+}
+
+function renderContratos() {
+    const byType = {};
+    employeesStore.forEach(e => {
+        const t = e.contract_type || 'Sin definir';
+        byType[t] = byType[t] || { count: 0, payroll: 0, list: [] };
+        byType[t].count++;
+        byType[t].payroll += e.salary || 0;
+        byType[t].list.push(e);
+    });
+    document.getElementById('contratosCards').innerHTML = Object.entries(byType).map(([t, d]) => `
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-rose-500 border-slate-200">
+            <span class="text-[10px] text-rose-500 font-bold uppercase">${t}</span>
+            <h3 class="text-lg font-black text-slate-800 mt-1">${d.count} personas</h3>
+            <p class="text-[11px] text-slate-500 font-bold">Planilla: S/ ${d.payroll.toFixed(2)}</p>
+        </div>`).join('') || '<p class="col-span-3 text-xs text-slate-400 text-center py-6">Sin datos</p>';
+    const tbody = document.getElementById('contratosBody');
+    tbody.innerHTML = employeesStore.map(e => `<tr class="border-b hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">${e.full_name}</td>
+        <td class="p-3">${e.position}</td>
+        <td class="p-3">${e.contract_type}</td>
+        <td class="p-3 font-mono">${e.contract_start||'—'}</td>
+        <td class="p-3 font-mono">${e.contract_end||'—'}</td>
+        <td class="p-3">${stBadge(e)}</td>
+    </tr>`).join('');
+    if (employeesStore.length === 0) tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">Sin contratos registrados.</td></tr>';
+}
+
+function renderPuestos() {
+    const byPos = {};
+    employeesStore.forEach(e => {
+        const p = e.position || 'Sin puesto';
+        byPos[p] = byPos[p] || { count: 0, payroll: 0 };
+        byPos[p].count++;
+        byPos[p].payroll += e.salary || 0;
+    });
+    const cards = Object.entries(byPos).map(([p, d]) => `
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-rose-500 border-slate-200">
+            <span class="text-[10px] text-rose-500 font-bold uppercase">${p}</span>
+            <h3 class="text-lg font-black text-slate-800 mt-1">${d.count}</h3>
+            <p class="text-[11px] text-slate-500 font-bold">Planilla: S/ ${d.payroll.toFixed(2)}</p>
+        </div>`).join('');
+    document.getElementById('puestosCards').innerHTML = cards || '<p class="col-span-3 text-xs text-slate-400 text-center py-6">Sin puestos registrados.</p>';
+}
+
+function renderVacaciones() {
+    const tbody = document.getElementById('vacacionesBody');
+    tbody.innerHTML = employeesStore.map(e => `<tr class="border-b hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">${e.full_name}</td>
+        <td class="p-3 font-mono">${e.document_number}</td>
+        <td class="p-3">${e.position}</td>
+        <td class="p-3">${e.vacation_days_used || 0}</td>
+        <td class="p-3 font-bold text-rose-600">${e.vacation_days_available} días</td>
+        <td class="p-3">${stBadge(e)}</td>
+        <td class="p-3 text-right"><button onclick='useVacation(${e.id})' class="text-rose-600 hover:underline text-xs font-bold">🧳 Consumir</button></td>
+    </tr>`).join('');
+    if (employeesStore.length === 0) tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">Sin registros.</td></tr>';
+}
+
+function renderDerived(view) {
+    if (view === 'contratos') renderContratos();
+    else if (view === 'puestos') renderPuestos();
+    else if (view === 'vacaciones') renderVacaciones();
+}
+
+async function loadData() {
+    let employees = [];
+    try { employees = await api('/api/employees'); } catch (e) { employees = []; }
+    employeesStore = employees;
+
+    let totalPayroll = 0;
+    employees.forEach(e => { if (e.status === 'active') totalPayroll += e.salary; });
+    document.getElementById('cardPayroll').innerText = 'S/ ' + Number(totalPayroll).toFixed(2);
+    document.getElementById('cardWorkers').innerText = employees.length;
+    document.getElementById('personalCount').innerText = employees.length;
+
+    const tbody = document.getElementById('tableBody');
+    if (employees.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay personal registrado.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = employees.map(e => `<tr class="border-b hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">${e.full_name}</td>
+        <td class="p-3 font-mono">${e.document_number}</td>
+        <td class="p-3">${e.position}</td>
+        <td class="p-3 font-bold text-rose-600">S/ ${Number(e.salary).toFixed(2)}</td>
+        <td class="p-3">${e.contract_type}</td>
+        <td class="p-3">${e.vacation_days_available} días <button onclick='useVacation(${e.id})' class="text-rose-600 hover:underline ml-1" title="Consumir vacaciones">🧳</button></td>
+        <td class="p-3">${stBadge(e)}</td>
+        <td class="p-3 text-right whitespace-nowrap">
+            <button onclick='openEditModal(${JSON.stringify(e)})' class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded font-bold">✏️ Editar</button>
+            <button onclick='removeItem(${e.id})' class="text-red-600 hover:bg-red-50 px-2 py-1 rounded font-bold">🗑️ Eliminar</button>
+        </td>
+    </tr>`).join('');
+    if (currentView !== 'personal') renderDerived(currentView);
+}
+
+window.openEdit = function(e) {
+    editingId = e.id;
+    document.getElementById('modalTitle').innerText = 'Editar Colaborador #' + e.id;
+    document.getElementById('f_id').value = e.id;
+    document.getElementById('f_name').value = e.full_name;
+    document.getElementById('f_doc').value = e.document_number;
+    document.getElementById('f_position').value = e.position;
+    document.getElementById('f_salary').value = e.salary;
+    document.getElementById('f_contract').value = e.contract_type || 'Indefinido';
+    document.getElementById('f_status').value = e.status;
+    document.getElementById('f_start').value = e.contract_start || '';
+    document.getElementById('f_end').value = e.contract_end || '';
+    openModal();
+};
+
+function resetForm() {
+    editingId = null;
+    document.getElementById('f_id').value = '';
+    document.getElementById('f_name').value = '';
+    document.getElementById('f_doc').value = '';
+    document.getElementById('f_position').value = '';
+    document.getElementById('f_salary').value = '0';
+    document.getElementById('f_contract').value = 'Indefinido';
+    document.getElementById('f_status').value = 'active';
+    document.getElementById('f_start').value = '';
+    document.getElementById('f_end').value = '';
+    document.getElementById('modalTitle').innerText = 'Nuevo Registro';
+}
+
+const _baseOpenModal = window.openModal;
+window.openModal = function() { resetForm(); _baseOpenModal(); };
+
+document.getElementById('modalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = {
+        full_name: document.getElementById('f_name').value,
+        document_number: document.getElementById('f_doc').value,
+        position: document.getElementById('f_position').value,
+        salary: parseFloat(document.getElementById('f_salary').value) || 0,
+        contract_type: document.getElementById('f_contract').value,
+        contract_start: document.getElementById('f_start').value,
+        contract_end: document.getElementById('f_end').value,
+    };
+    try {
+        if (editingId) {
+            body.status = document.getElementById('f_status').value;
+            await api('/api/employees/' + editingId, 'PUT', body);
+            showToast('Colaborador actualizado');
+        } else {
+            body.status = document.getElementById('f_status').value;
+            await api('/api/employees', 'POST', body);
+            showToast('Colaborador registrado');
+        }
+        closeModal(); loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+});
+
+async function removeItem(id) {
+    if (!confirm('¿Eliminar colaborador?')) return;
+    try { await api('/api/employees/' + id, 'DELETE'); showToast('Colaborador eliminado'); loadData(); }
+    catch (err) { showToast(err.message, 'error'); }
+}
+
+async function useVacation(id) {
+    const days = prompt('Días de vacaciones a consumir:');
+    if (days === null) return;
+    try {
+        await api('/api/employees/' + id + '/vacations', 'POST', { days: parseInt(days) || 0 });
+        showToast('Vacaciones registradas');
+        loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const res = await fetch('/api/employees/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showToast(`Importados ${data.created} colaboradores` + (data.errors && data.errors.length ? ` (${data.errors.length} errores)` : ''));
+        loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+    input.value = '';
+}
+
+const initView = new URLSearchParams(location.search).get('view');
+loadData();
+switchView(initView || 'personal');
+</script>
+{% endblock %}

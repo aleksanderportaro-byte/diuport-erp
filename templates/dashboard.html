@@ -46,37 +46,37 @@
 
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-6 justify-center">
             <!-- Ventas -->
-            <div onclick="openModule('sales')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+            <div onclick="location.href='/dashboard/ventas'" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
                 <div class="w-14 h-14 bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">🛒</div>
                 <span class="text-xs font-bold text-slate-700">Ventas</span>
             </div>
             <!-- Compras -->
-            <div onclick="openModule('purchases')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+            <div onclick="location.href='/dashboard/compras'" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
                 <div class="w-14 h-14 bg-emerald-50 group-hover:bg-emerald-600 text-emerald-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">📥</div>
                 <span class="text-xs font-bold text-slate-700">Compras</span>
             </div>
             <!-- Abastecimiento -->
-            <div onclick="openModule('supply')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+            <div onclick="location.href='/dashboard/abastecimiento'" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
                 <div class="w-14 h-14 bg-amber-50 group-hover:bg-amber-600 text-amber-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">📦</div>
                 <span class="text-xs font-bold text-slate-700">Abastecimiento</span>
             </div>
             <!-- Producción -->
-            <div onclick="openModule('production')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+            <div onclick="location.href='/dashboard/produccion'" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
                 <div class="w-14 h-14 bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">⚙️</div>
                 <span class="text-xs font-bold text-slate-700">Producción</span>
             </div>
             <!-- RRHH -->
-            <div onclick="openModule('hr')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+            <div onclick="location.href='/dashboard/rrhh'" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
                 <div class="w-14 h-14 bg-rose-50 group-hover:bg-rose-600 text-rose-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">👔</div>
                 <span class="text-xs font-bold text-slate-700">RRHH</span>
             </div>
             <!-- Finanzas -->
-            <div onclick="openModule('finance')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+            <div onclick="location.href='/dashboard/finanzas'" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
                 <div class="w-14 h-14 bg-teal-50 group-hover:bg-teal-600 text-teal-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">💰</div>
                 <span class="text-xs font-bold text-slate-700">Finanzas</span>
             </div>
             <!-- Proyecciones -->
-            <div onclick="openModule('analysis')" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
+            <div onclick="location.href='/dashboard/proyecciones'" class="bg-white p-5 rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 cursor-pointer transition transform hover:-translate-y-1 flex flex-col items-center text-center group">
                 <div class="w-14 h-14 bg-purple-50 group-hover:bg-purple-600 text-purple-600 group-hover:text-white rounded-2xl flex items-center justify-center text-xl transition shadow-inner mb-3">📈</div>
                 <span class="text-xs font-bold text-slate-700">Proyecciones</span>
             </div>
@@ -93,36 +93,28 @@
         <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 min-h-[calc(100vh-57px)]">
             <div class="p-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Módulos del Sistema</div>
             <nav class="space-y-1 px-2">
-                <button onclick="switchTab('sales')" id="navSales" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                <a href="/dashboard/ventas" id="navSales" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
                     <span>🛒</span><span>Ventas</span>
-                </button>
-                <button onclick="switchTab('purchases')" id="navPurchases" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                </a>
+                <a href="/dashboard/compras" id="navPurchases" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
                     <span>📥</span><span>Compras</span>
-                </button>
-                <button onclick="switchTab('supply')" id="navSupply" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                </a>
+                <a href="/dashboard/abastecimiento" id="navSupply" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
                     <span>📦</span><span>Abastecimiento</span>
-                </button>
-                <!-- Submenú contextual de Abastecimiento -->
-                <div id="supplySubmenu" class="hidden pl-6 space-y-1 py-1">
-                    <button onclick="filterSupply('all')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">📋 Almacén General</button>
-                    <button onclick="filterSupply('realtime')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">⚡ Stock en Tiempo Real</button>
-                    <button onclick="filterSupply('raw')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">🧱 Materias Primas</button>
-                    <button onclick="filterSupply('terminated')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">🏷️ Prod. Terminados / Secundarios</button>
-                    <button onclick="filterSupply('rotation')" class="w-full text-left px-2 py-1.5 rounded text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">🔄 Rotación de Producto</button>
-                </div>
+                </a>
 
-                <button onclick="switchTab('production')" id="navProduction" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                <a href="/dashboard/produccion" id="navProduction" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
                     <span>⚙️</span><span>Producción</span>
-                </button>
-                <button onclick="switchTab('hr')" id="navHr" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                </a>
+                <a href="/dashboard/rrhh" id="navHr" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
                     <span>👔</span><span>Recursos Humanos</span>
-                </button>
-                <button onclick="switchTab('finance')" id="navFinance" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                </a>
+                <a href="/dashboard/finanzas" id="navFinance" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
                     <span>💰</span><span>Administración y Finanzas</span>
-                </button>
-                <button onclick="switchTab('analysis')" id="navAnalysis" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                </a>
+                <a href="/dashboard/proyecciones" id="navAnalysis" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
                     <span>📈</span><span>Análisis y Proyección</span>
-                </button>
+                </a>
             </nav>
         </aside>
 

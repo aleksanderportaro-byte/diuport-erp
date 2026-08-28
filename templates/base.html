@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Diuport ERP{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfeff', 100: '#cffafe', 200: '#a5f3fc',
+                            300: '#67e8f9', 400: '#22d3ee', 500: '#06b6d4',
+                            600: '#0891b2', 700: '#0e7490', 800: '#155e75',
+                            900: '#164e63'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-slate-100 min-h-screen overflow-hidden">
+
+    <!-- ===== TOP BAR CORPORATIVA (FIJA) ===== -->
+    <header id="topbar" class="fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm px-5 h-14 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="/dashboard" class="flex items-center space-x-2 text-cyan-600 font-black tracking-wider text-sm">
+                <span class="bg-cyan-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-xs shadow-md">DP</span>
+                <span>DIUPORT ERP</span>
+            </a>
+            <span class="hidden md:inline text-[11px] text-slate-400 font-medium">Sistema Multi-Módulo Interconectado</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="hidden sm:block bg-slate-900 text-white px-3 py-1 rounded text-xs font-bold shadow-sm">Soporte</span>
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                <span>👤</span><span>Admin</span>
+            </div>
+            <a href="/" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold transition">Salir</a>
+        </div>
+    </header>
+
+    <div class="flex pt-14 h-screen">
+        <!-- ===== SIDEBAR CONTEXTUAL DINÁMICO ===== -->
+        {%
+          set _path = request.path
+        %}
+        {%
+          set _modul =
+            'ventas' if _path.startswith('/dashboard/ventas') else
+            'compras' if _path.startswith('/dashboard/compras') else
+            'abastecimiento' if _path.startswith('/dashboard/abastecimiento') else
+            'produccion' if _path.startswith('/dashboard/produccion') else
+            'rrhh' if _path.startswith('/dashboard/rrhh') else
+            'finanzas' if _path.startswith('/dashboard/finanzas') else
+            'proyecciones' if _path.startswith('/dashboard/proyecciones') else
+            'dashboard'
+        %}
+        {%
+          set _modulos = {
+            'ventas': {
+              'nombre': 'Ventas', 'emoji': '🛒',
+              'accent': 'text-blue-400 bg-blue-500/10 border-blue-500/30',
+              'dot': 'bg-blue-400',
+              'base': '/dashboard/ventas',
+              'items': [
+                {'label': 'Clientes', 'href': '/dashboard/ventas?view=clientes'},
+                {'label': 'Cotizaciones', 'href': '/dashboard/ventas?view=cotizaciones'},
+                {'label': 'Facturación', 'href': '/dashboard/ventas?view=facturacion'},
+                {'label': 'Pedidos', 'href': '/dashboard/ventas?view=pedidos'},
+              ],
+            },
+            'compras': {
+              'nombre': 'Compras', 'emoji': '📥',
+              'accent': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+              'dot': 'bg-emerald-400',
+              'base': '/dashboard/compras',
+              'items': [
+                {'label': 'Proveedores', 'href': '/dashboard/compras?view=suppliers'},
+                {'label': 'Órdenes de Compra', 'href': '/dashboard/compras?view=orders'},
+                {'label': 'Recepción de Insumos', 'href': '/dashboard/compras?view=recepcion'},
+              ],
+            },
+            'abastecimiento': {
+              'nombre': 'Abastecimiento', 'emoji': '📦',
+              'accent': 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+              'dot': 'bg-amber-400',
+              'base': '/dashboard/abastecimiento',
+              'items': [
+                {'label': 'Materia Prima', 'href': '/dashboard/abastecimiento?view=materia'},
+                {'label': 'Productos Terminados', 'href': '/dashboard/abastecimiento?view=terminados'},
+                {'label': 'Alertas de Stock', 'href': '/dashboard/abastecimiento?view=alertas'},
+              ],
+            },
+            'produccion': {
+              'nombre': 'Producción', 'emoji': '⚙️',
+              'accent': 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30',
+              'dot': 'bg-indigo-400',
+              'base': '/dashboard/produccion',
+              'items': [
+                {'label': 'Órdenes de Trabajo', 'href': '/dashboard/produccion?view=orders'},
+                {'label': 'Recetas BOM', 'href': '/dashboard/produccion?view=bom'},
+                {'label': 'Tiempos y Mano de Obra', 'href': '/dashboard/produccion?view=tiempos'},
+              ],
+            },
+            'rrhh': {
+              'nombre': 'Recursos Humanos', 'emoji': '👔',
+              'accent': 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+              'dot': 'bg-rose-400',
+              'base': '/dashboard/rrhh',
+              'items': [
+                {'label': 'Registro de Personal', 'href': '/dashboard/rrhh?view=personal'},
+                {'label': 'Contratos', 'href': '/dashboard/rrhh?view=contratos'},
+                {'label': 'Puestos', 'href': '/dashboard/rrhh?view=puestos'},
+                {'label': 'Vacaciones', 'href': '/dashboard/rrhh?view=vacaciones'},
+              ],
+            },
+            'finanzas': {
+              'nombre': 'Finanzas', 'emoji': '💰',
+              'accent': 'text-teal-400 bg-teal-500/10 border-teal-500/30',
+              'dot': 'bg-teal-400',
+              'base': '/dashboard/finanzas',
+              'items': [
+                {'label': 'Cuentas por Cobrar', 'href': '/dashboard/finanzas?view=receivables'},
+                {'label': 'Cuentas por Pagar', 'href': '/dashboard/finanzas?view=payables'},
+                {'label': 'Gastos Fijos', 'href': '/dashboard/finanzas?view=expenses'},
+                {'label': 'Estado de Resultados', 'href': '/dashboard/finanzas?view=report'},
+              ],
+            },
+            'proyecciones': {
+              'nombre': 'Proyecciones', 'emoji': '📈',
+              'accent': 'text-purple-400 bg-purple-500/10 border-purple-500/30',
+              'dot': 'bg-purple-400',
+              'base': '/dashboard/proyecciones',
+              'items': [
+                {'label': 'Simulador de Flujo de Caja', 'href': '/dashboard/proyecciones?view=simulador'},
+                {'label': 'Proyección de Demanda', 'href': '/dashboard/proyecciones?view=demanda'},
+                {'label': 'Rotación', 'href': '/dashboard/proyecciones?view=rotacion'},
+              ],
+            },
+          }
+        %}
+        {% set _mod = _modulos.get(_modul) %}
+        <aside class="w-60 bg-slate-900 text-slate-300 flex flex-col shrink-0 overflow-y-auto no-scrollbar" style="height: calc(100vh - 56px);">
+            <nav class="space-y-1 px-3 py-4">
+                <!-- Volver al Menú Principal / Dashboard General -->
+                <a href="/dashboard" class="flex items-center space-x-2 px-3 py-2.5 mb-3 rounded-lg text-xs font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition border border-slate-700/60">
+                    <span class="text-slate-400">&#9664;</span><span>Menú Principal</span>
+                </a>
+
+                {% if _mod %}
+                    <!-- Cabecera del módulo activo -->
+                    <div class="px-3 pt-2 pb-3">
+                        <div class="flex flex-col items-center text-center">
+                            <span class="text-2xl">{{ _mod.emoji }}</span>
+                            <span class="mt-1 text-xs font-black tracking-widest text-slate-100 uppercase">{{ _mod.nombre }}</span>
+                        </div>
+                    </div>
+
+                    <div class="px-1 text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1">Áreas del Módulo</div>
+
+                    <!-- Sub-áreas del módulo -->
+                    <div class="space-y-1">
+                        {% for item in _mod['items'] %}
+                        <a href="{{ item.href }}" class="group flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-300">
+                            <span class="w-1.5 h-1.5 rounded-full {{ _mod.dot }} opacity-70 group-hover:opacity-100"></span>
+                            <span>{{ item.label }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="px-1 text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1">Panel General</div>
+                {% endif %}
+
+                <div class="my-3 border-t border-slate-700/60"></div>
+                <a href="/dashboard" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition text-slate-400">
+                    <span>🏠</span><span>Dashboard</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- ===== WORKSPACE ===== -->
+        <main class="flex-grow bg-slate-100 overflow-y-auto p-6" style="height: calc(100vh - 56px);">
+            <!-- Encabezado del módulo -->
+            <div class="mb-5">
+                <h1 class="text-xl font-black text-slate-800">{% block page_title %}Módulo{% endblock %}</h1>
+                <p class="text-xs text-slate-500 mt-0.5">{% block page_desc %}{% endblock %}</p>
+            </div>
+
+            <!-- Barra de acciones superiores -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3 mb-5">
+                <div>{% block header_actions_left %}{% endblock %}</div>
+                <div class="flex items-center gap-2">
+                    {% block toolbar %}
+                    <button type="button" onclick="openModal()"
+                        class="{% block btn_new_color %}bg-brand-600 hover:bg-brand-700{% endblock %} text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">
+                        ➕ Nuevo Registro
+                    </button>
+                    <label class="cursor-pointer {% block btn_upload_color %}bg-slate-800 hover:bg-slate-900{% endblock %} text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">
+                        📥 Subir Archivo (Excel/CSV)
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(this)">
+                    </label>
+                    {% endblock %}
+                </div>
+            </div>
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Modal base para formularios reutilizables -->
+    <div id="modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 id="modalTitle" class="text-sm font-bold text-slate-800 border-b pb-2">Nuevo Registro</h3>
+            <form id="modalForm" class="space-y-3">
+                {% block modal_form %}{% endblock %}
+                <div class="flex justify-end space-x-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal()" class="bg-slate-200 text-slate-700 px-4 py-1.5 rounded text-xs font-bold">Cancelar</button>
+                    <button type="submit" id="modalSubmit" class="text-white px-4 py-1.5 rounded text-xs font-bold {% block btn_save_color %}bg-brand-600{% endblock %}">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast de notificaciones -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-lg shadow-xl text-white text-xs font-bold"></div>
+
+    <script>
+        const MODULE_COLORS = {
+            'ventas': { new: 'bg-blue-600 hover:bg-blue-700', save: 'bg-blue-600', upload: 'bg-blue-800 hover:bg-blue-900' },
+            'compras': { new: 'bg-emerald-600 hover:bg-emerald-700', save: 'bg-emerald-600', upload: 'bg-emerald-800 hover:bg-emerald-900' },
+            'abastecimiento': { new: 'bg-amber-600 hover:bg-amber-700', save: 'bg-amber-600', upload: 'bg-amber-700 hover:bg-amber-800' },
+            'produccion': { new: 'bg-indigo-600 hover:bg-indigo-700', save: 'bg-indigo-600', upload: 'bg-indigo-800 hover:bg-indigo-900' },
+            'rrhh': { new: 'bg-rose-600 hover:bg-rose-700', save: 'bg-rose-600', upload: 'bg-rose-700 hover:bg-rose-800' },
+            'finanzas': { new: 'bg-teal-600 hover:bg-teal-700', save: 'bg-teal-600', upload: 'bg-teal-700 hover:bg-teal-800' },
+            'proyecciones': { new: 'bg-purple-600 hover:bg-purple-700', save: 'bg-purple-600', upload: 'bg-purple-700 hover:bg-purple-800' },
+        };
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-lg shadow-xl text-white text-xs font-bold ' +
+                (type === 'success' ? 'bg-emerald-600' : 'bg-red-600');
+            toast.innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3500);
+        }
+
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); }
+
+        function openEditModal(record) { window.openEdit(record); }
+
+        async function api(url, method = 'GET', body = null) {
+            const opts = { method, headers: {} };
+            if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+            const res = await fetch(url, opts);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || ('Error ' + res.status));
+            return data;
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal')) closeModal();
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

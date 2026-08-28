@@ -10,10 +10,10 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(
     DATABASE_URL, 
     pool_pre_ping=True, 
-    pool_size=5, 
-    max_overflow=10,
-    pool_recycle=300,  # Recicla conexiones cada 5 minutos para evitar bloqueos fantasma
-    pool_timeout=10    # Libera el intento rápidamente si hay congestión temporal
+    pool_size=10, 
+    max_overflow=20,
+    pool_recycle=180,  # Recicla conexiones cada 5 minutos para evitar bloqueos fantasma
+    pool_timeout=15    # Libera el intento rápidamente si hay congestión temporal
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

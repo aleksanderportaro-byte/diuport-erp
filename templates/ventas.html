@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% block title %}Ventas | Diuport ERP{% endblock %}
+{% block page_title %}🛒 Ventas y Facturación{% endblock %}
+{% block page_desc %}Clientes, cotizaciones y facturación con validación automática de stock.{% endblock %}
+{% block btn_new_color %}bg-blue-600 hover:bg-blue-700{% endblock %}
+{% block btn_upload_color %}bg-blue-800 hover:bg-blue-900{% endblock %}
+{% block btn_save_color %}bg-blue-600{% endblock %}
+
+{% block header_actions_left %}
+<div class="flex bg-slate-100 rounded-lg p-0.5 overflow-x-auto no-scrollbar">
+    <button onclick="switchView('ventas')" id="tabVentasBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-white bg-blue-600">Ventas</button>
+    <button onclick="switchView('clientes')" id="tabClientesBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-blue-600">Clientes</button>
+    <button onclick="switchView('cotizaciones')" id="tabCotizBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-blue-600">Cotizaciones</button>
+    <button onclick="switchView('facturacion')" id="tabFactBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-blue-600">Facturación</button>
+    <button onclick="switchView('pedidos')" id="tabPedBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-blue-600">Pedidos</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- ============ VIEW: VENTAS ============ -->
+<div id="viewVentas">
+    <div class="flex items-center gap-3 mb-4">
+        <select id="filterStatus" onchange="loadData()" class="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 font-bold text-slate-600">
+            <option value="">Todos los estados</option>
+            <option value="completed">Completado</option>
+            <option value="pending">Pendiente</option>
+            <option value="cancelled">Cancelado</option>
+        </select>
+    </div>
+
+    <!-- Tarjetas de métricas superiores (datos reales) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-blue-500 border-slate-200">
+            <span class="text-[10px] text-blue-500 font-bold uppercase">Ingresos Totales</span>
+            <h3 id="cardIncome" class="text-xl font-black text-blue-700 mt-1">S/ 0.00</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-cyan-500 border-slate-200">
+            <span class="text-[10px] text-cyan-600 font-bold uppercase">Nº de Ventas</span>
+            <h3 id="cardCount" class="text-xl font-black text-cyan-700 mt-1">0</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-indigo-500 border-slate-200">
+            <span class="text-[10px] text-indigo-500 font-bold uppercase">Ticket Promedio</span>
+            <h3 id="cardAvg" class="text-xl font-black text-indigo-700 mt-1">S/ 0.00</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-violet-500 border-slate-200">
+            <span class="text-[10px] text-violet-500 font-bold uppercase">Por Cobrar</span>
+            <h3 id="cardCollect" class="text-xl font-black text-violet-700 mt-1">S/ 0.00</h3>
+        </div>
+    </div>
+
+    <!-- Tabla central del módulo -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3"># Venta</th>
+                    <th class="p-3">Cliente</th>
+                    <th class="p-3">RUC</th>
+                    <th class="p-3">Monto (S/)</th>
+                    <th class="p-3">Estado</th>
+                    <th class="p-3">Estado de Pago</th>
+                    <th class="p-3 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============ VIEW: CLIENTES ============ -->
+<div id="viewClientes" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-700 uppercase">Clientes registrados</h3>
+            <span id="clientCount" class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">0</span>
+        </div>
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3">Cliente</th>
+                    <th class="p-3">RUC/DNI</th>
+                    <th class="p-3">Email</th>
+                    <th class="p-3">Teléfono</th>
+                    <th class="p-3">Dirección</th>
+                </tr>
+            </thead>
+            <tbody id="clientesBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============ VIEW: COTIZACIONES ============ -->
+<div id="viewCotizaciones" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+        <span class="text-4xl">📄</span>
+        <h3 class="text-sm font-bold text-slate-800 mt-3">Cotizaciones</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Sección de cotizaciones a clientes. Aquí se gestionarán propuestas y presupuestos antes de convertirlos en ventas.</p>
+        <p class="text-[10px] text-slate-400 mt-3">Disponible próximamente</p>
+    </div>
+</div>
+
+<!-- ============ VIEW: FACTURACIÓN ============ -->
+<div id="viewFacturacion" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+        <span class="text-4xl">🧾</span>
+        <h3 class="text-sm font-bold text-slate-800 mt-3">Facturación</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Emisión de comprobantes (facturas y boletas) asociados a las ventas registradas.</p>
+        <p class="text-[10px] text-slate-400 mt-3">Disponible próximamente</p>
+    </div>
+</div>
+
+<!-- ============ VIEW: PEDIDOS ============ -->
+<div id="viewPedidos" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+        <span class="text-4xl">📦</span>
+        <h3 class="text-sm font-bold text-slate-800 mt-3">Pedidos</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Gestión de pedidos de clientes con seguimiento de estados y preparación de despacho.</p>
+        <p class="text-[10px] text-slate-400 mt-3">Disponible próximamente</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block modal_form %}
+<input type="hidden" id="f_id">
+<div class="grid grid-cols-1 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Cliente *</label>
+        <select id="f_client_id" class="w-full p-2 border rounded text-xs bg-slate-50" required></select>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-xs text-slate-500 font-bold">Producto *</label>
+            <select id="f_product_id" class="w-full p-2 border rounded text-xs bg-slate-50" required></select>
+        </div>
+        <div><label class="text-xs text-slate-500 font-bold">Cantidad *</label>
+            <input type="number" id="f_quantity" value="1" min="1" step="1" class="w-full p-2 border rounded text-xs bg-slate-50" required>
+        </div>
+    </div>
+    <div id="productInfo" class="text-xs text-slate-500 bg-slate-50 p-2 rounded border hidden"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let editingId = null;
+let clients = [];
+let products = [];
+
+async function populateSelects() {
+    clients = await api('/api/third-parties/clients');
+    products = await api('/api/products?type=termined');
+    const clientSel = document.getElementById('f_client_id');
+    const prodSel = document.getElementById('f_product_id');
+    clientSel.innerHTML = '<option value="">— Seleccionar —</option>' + clients.map(c => `<option value="${c.id}">${c.name} (${c.document_number||''})</option>`).join('');
+    prodSel.innerHTML = '<option value="">— Seleccionar —</option>' + products.map(p => `<option value="${p.id}">${p.name} — S/ ${Number(p.price||0).toFixed(2)} (stock: ${p.stock})</option>`).join('');
+    prodSel.onchange = () => {
+        const p = products.find(x => x.id == prodSel.value);
+        const info = document.getElementById('productInfo');
+        if (p) {
+            info.classList.remove('hidden');
+            info.innerText = `💡 ${p.name} — Precio S/ ${Number(p.price).toFixed(2)} — Stock disponible: ${p.stock}`;
+        } else info.classList.add('hidden');
+    };
+}
+
+async function loadData() {
+    const sales = await api('/api/sales');
+    const cMap = {};
+    clients.forEach(c => cMap[c.id] = c.document_number);
+    sales.forEach(s => s.client_ruc = cMap[s.client_id] || '—');
+    const filterStatus = document.getElementById('filterStatus').value;
+    let items = filterStatus ? sales.filter(s => s.status === filterStatus) : sales;
+
+    // Métricas superiores
+    const totalIncome = items.reduce((a, s) => a + (s.total_amount || 0), 0);
+    const paidIncome = items.filter(s => s.payment_status === 'paid').reduce((a, s) => a + (s.total_amount || 0), 0);
+    document.getElementById('cardIncome').innerText = 'S/ ' + Number(totalIncome).toFixed(2);
+    document.getElementById('cardCount').innerText = items.length;
+    document.getElementById('cardAvg').innerText = 'S/ ' + (items.length ? (totalIncome / items.length).toFixed(2) : '0.00');
+    document.getElementById('cardCollect').innerText = 'S/ ' + Number(totalIncome - paidIncome).toFixed(2);
+
+    const tbody = document.getElementById('tableBody');
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay ventas registradas.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = items.map(s => {
+        const payBadge = s.payment_status === 'paid'
+            ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">Pagado</span>'
+            : s.payment_status === 'partial'
+                ? '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold text-[10px]">Parcial</span>'
+                : '<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">Pendiente</span>';
+        const stBadge = s.status === 'completed'
+            ? '<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold text-[10px]">Completado</span>'
+            : s.status === 'cancelled'
+                ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold text-[10px]">Cancelado</span>'
+                : '<span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">Pendiente</span>';
+        return `<tr class="border-b hover:bg-slate-50">
+            <td class="p-3 font-mono font-bold">#${s.sale_id}</td>
+            <td class="p-3 font-medium text-slate-800">${s.client_name||'—'}</td>
+            <td class="p-3 font-mono">${s.client_ruc || '—'}</td>
+            <td class="p-3 font-bold">S/ ${Number(s.total_amount).toFixed(2)}</td>
+            <td class="p-3">${stBadge}</td>
+            <td class="p-3">${payBadge}</td>
+            <td class="p-3 text-right whitespace-nowrap">
+                <button onclick='openEditModal(${JSON.stringify(s)})' class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded font-bold">✏️ Editar</button>
+                <button onclick='removeItem(${s.sale_id})' class="text-red-600 hover:bg-red-50 px-2 py-1 rounded font-bold">🗑️ Eliminar</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+// El GET de ventas no devuelve RUC del cliente; se adjunta en loadData()
+
+window.openEdit = function(s) {
+    editingId = s.sale_id;
+    document.getElementById('modalTitle').innerText = 'Editar Venta #' + s.sale_id;
+    document.getElementById('f_id').value = s.sale_id;
+    document.getElementById('f_client_id').value = s.client_id || '';
+    document.getElementById('f_product_id').value = s.items && s.items[0] ? s.items[0].product_id : '';
+    document.getElementById('f_quantity').value = s.items && s.items[0] ? s.items[0].quantity : 1;
+    openModal();
+};
+
+function resetForm() {
+    editingId = null;
+    document.getElementById('f_id').value = '';
+    document.getElementById('f_client_id').value = '';
+    document.getElementById('f_product_id').value = '';
+    document.getElementById('f_quantity').value = '1';
+    document.getElementById('productInfo').classList.add('hidden');
+    document.getElementById('modalTitle').innerText = 'Nuevo Registro';
+}
+
+const _baseOpenModal = window.openModal;
+window.openModal = function() { resetForm(); _baseOpenModal(); };
+
+document.getElementById('modalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const client_id = parseInt(document.getElementById('f_client_id').value);
+    const product_id = parseInt(document.getElementById('f_product_id').value);
+    const quantity = parseInt(document.getElementById('f_quantity').value) || 1;
+
+    // Validación de stock previa
+    const prod = products.find(x => x.id === product_id);
+    if (prod && prod.stock < quantity) {
+        showToast(`Stock insuficiente: disponible ${prod.stock}`, 'error');
+        return;
+    }
+
+    try {
+        if (editingId) {
+            await api('/api/sales/' + editingId, 'PUT', { status: 'completed' });
+            showToast('Venta actualizada');
+        } else {
+            await api('/api/sales', 'POST', { company_id: 1, client_id, items: [{ product_id, quantity }] });
+            showToast('Venta registrada (stock validado y descontado)');
+        }
+        closeModal(); loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+});
+
+async function removeItem(id) {
+    if (!confirm('¿Eliminar esta venta? Se restaurará el stock.')) return;
+    try {
+        await api('/api/sales/' + id, 'DELETE');
+        showToast('Venta eliminada');
+        loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const res = await fetch('/api/sales/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showToast(`Importadas ${data.created} ventas` + (data.errors && data.errors.length ? ` (${data.errors.length} errores)` : ''));
+        loadData();
+    } catch (err) { showToast(err.message, 'error'); }
+    input.value = '';
+}
+
+function switchView(view) {
+    ['ventas','clientes','cotizaciones','facturacion','pedidos'].forEach(v => {
+        document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1)).classList.toggle('hidden', v !== view);
+    });
+    const btnMap = { ventas:'tabVentasBtn', clientes:'tabClientesBtn', cotizaciones:'tabCotizBtn', facturacion:'tabFactBtn', pedidos:'tabPedBtn' };
+    Object.entries(btnMap).forEach(([k,id]) => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-md text-xs font-bold ' + (k === view ? 'text-white bg-blue-600' : 'text-slate-500 hover:text-blue-600');
+    });
+    if (view === 'clientes') loadClientes();
+}
+
+let clientesStore = [];
+async function loadClientes() {
+    try {
+        clientesStore = await api('/api/third-parties/clients');
+    } catch (e) { clientesStore = []; }
+    document.getElementById('clientCount').innerText = clientesStore.length;
+    const tbody = document.getElementById('clientesBody');
+    if (clientesStore.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">No hay clientes registrados.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = clientesStore.map(cl => `<tr class="border-b hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">${cl.name||'—'}</td>
+        <td class="p-3 font-mono">${cl.document_number||'—'}</td>
+        <td class="p-3">${cl.email||'—'}</td>
+        <td class="p-3">${cl.phone||'—'}</td>
+        <td class="p-3">${cl.address||'—'}</td>
+    </tr>`).join('');
+}
+
+(async () => {
+    await populateSelects();
+    loadData();
+    const v = new URLSearchParams(location.search).get('view');
+    if (v && ['clientes','cotizaciones','facturacion','pedidos'].includes(v)) switchView(v);
+})();
+</script>
+{% endblock %}

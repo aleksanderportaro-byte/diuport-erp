@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% block title %}Compras | Diuport ERP{% endblock %}
+{% block page_title %}📥 Compras y Proveedores{% endblock %}
+{% block page_desc %}Órdenes de compra que incrementan el stock al recibir y generan cuentas por pagar.{% endblock %}
+{% block btn_new_color %}bg-emerald-600 hover:bg-emerald-700{% endblock %}
+{% block btn_upload_color %}bg-emerald-800 hover:bg-emerald-900{% endblock %}
+{% block btn_save_color %}bg-emerald-600{% endblock %}
+
+{% block header_actions_left %}
+<div class="flex items-center gap-3">
+    <div class="flex bg-slate-100 rounded-lg p-0.5">
+    <button onclick="switchView('orders')" id="tabOrdersBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-white bg-emerald-600">Órdenes</button>
+    <button onclick="switchView('suppliers')" id="tabSuppliersBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700">Proveedores</button>
+    <button onclick="switchView('recepcion')" id="tabRecepcionBtn" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700">Recepción de Insumos</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Tarjetas de métricas superiores (datos reales) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-emerald-500 border-slate-200">
+        <span class="text-[10px] text-emerald-600 font-bold uppercase">Compras Totales</span>
+        <h3 id="cardPurchases" class="text-xl font-black text-emerald-700 mt-1">S/ 0.00</h3>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-green-500 border-slate-200">
+        <span class="text-[10px] text-green-600 font-bold uppercase">Nº de Órdenes</span>
+        <h3 id="cardOrders" class="text-xl font-black text-green-700 mt-1">0</h3>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-teal-500 border-slate-200">
+        <span class="text-[10px] text-teal-600 font-bold uppercase">Proveedores</span>
+        <h3 id="cardSuppliers" class="text-xl font-black text-teal-700 mt-1">0</h3>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-l-4 border-l-lime-500 border-slate-200">
+        <span class="text-[10px] text-lime-600 font-bold uppercase">Por Pagar</span>
+        <h3 id="cardPayable" class="text-xl font-black text-lime-700 mt-1">S/ 0.00</h3>
+    </div>
+</div>
+
+<!-- Vista Órdenes de Compra -->
+<div id="viewOrders">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3"># Compra</th>
+                    <th class="p-3">Proveedor</th>
+                    <th class="p-3">RUC</th>
+                    <th class="p-3">Insumo</th>
+                    <th class="p-3">Costo (S/)</th>
+                    <th class="p-3">Fecha</th>
+                    <th class="p-3 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Vista Proveedores -->
+<div id="viewSuppliers" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-700 uppercase">Directorio de Proveedores</h3>
+            <button onclick="addSupplierModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">➕ Proveedor</button>
+        </div>
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 border-b text-slate-600">
+                <tr>
+                    <th class="p-3">Nombre</th>
+                    <th class="p-3">RUC</th>
+                    <th class="p-3">Email</th>
+                    <th class="p-3">Teléfono</th>
+                    <th class="p-3 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="suppliersBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Vista Recepción de Insumos -->
+<div id="viewRecepcion" class="hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 text-center">
+        <span class="text-4xl">📦</span>
+        <h3 class="text-sm font-bold text-slate-800 mt-3">Recepción de Insumos</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Flujo de recepción de mercadería: verificación de guías, control de calidad e ingreso de los insumos al almacén contra las órdenes de compra.</p>
+        <p class="text-[10px] text-slate-400 mt-3">Disponible próximamente</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block modal_form %}
+<input type="hidden" id="f_id">
+<input type="hidden" id="f_supplier_mode" value="0">
+<!-- Formulario de ORDEN DE COMPRA -->
+<div id="formOrder" class="grid grid-cols-1 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Proveedor *</label>
+        <select id="f_supplier_id" class="w-full p-2 border rounded text-xs bg-slate-50" required></select>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-xs text-slate-500 font-bold">Insumo (SKU) *</label>
+            <select id="f_product_id" class="w-full p-2 border rounded text-xs bg-slate-50" required></select>
+        </div>
+        <div><label class="text-xs text-slate-500 font-bold">Cantidad *</label>
+            <input type="number" id="f_quantity" value="1" min="1" step="1" class="w-full p-2 border rounded text-xs bg-slate-50" required>
+        </div>
+    </div>
+    <div><label class="text-xs text-slate-500 font-bold">Costo Unitario (S/) *</label>
+        <input type="number" id="f_unit_cost" value="0" min="0" step="0.01" class="w-full p-2 border rounded text-xs bg-slate-50" required>
+    </div>
+</div>
+<!-- Formulario de PROVEEDOR -->
+<div id="formSupplier" class="hidden grid grid-cols-1 gap-2">
+    <div><label class="text-xs text-slate-500 font-bold">Nombre *</label><input type="text" id="s_name" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+    <div><label class="text-xs text-slate-500 font-bold">RUC *</label><input type="text" id="s_doc" class="w-full p-2 border rounded text-xs bg-slate-50" required></div>
+    <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-xs text-slate-500 font-bold">Email</label><input type="text" id="s_email" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+        <div><label class="text-xs text-slate-500 font-bold">Teléfono</label><input type="text" id="s_phone" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+    </div>
+    <div><label class="text-xs text-slate-500 font-bold">Dirección</label><input type="text" id="s_address" class="w-full p-2 border rounded text-xs bg-slate-50"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let editingId = null;
+let suppliers = [];
+let rawProducts = [];
+let currentView = 'orders';
+
+async function loadSuppliers() {
+    suppliers = await api('/api/third-parties/suppliers');
+    const supSel = document.getElementById('f_supplier_id');
+    supSel.innerHTML = '<option value="">— Seleccionar —</option>' + suppliers.map(s => `<option value="${s.id}">${s.name} (${s.document_number||''})</option>`).join('');
+    renderSuppliers();
+}
+
+async function loadRawProducts() {
+    rawProducts = await api('/api/products?type=raw');
+    const prodSel = document.getElementById('f_product_id');
+    prodSel.innerHTML = '<option value="">— Seleccionar —</option>' + rawProducts.map(p => `<option value="${p.id}">${p.sku} — ${p.name} (stock: ${p.stock})</option>`).join('');
+}
+
+async function loadData() {
+    const purchases = await api('/api/purchases');
+    const supMap = {};
+    suppliers.forEach(s => supMap[s.id] = s.document_number);
+    purchases.forEach(p => p.supplier_ruc = supMap[p.supplier_id] || '—');
+    const total = purchases.reduce((a, p) => a + (p.total_amount || 0), 0);
+
+    // Métricas superiores
+    document.getElementById('cardPurchases').innerText = 'S/ ' + Number(total).toFixed(2);
+    document.getElementById('cardOrders').innerText = purchases.length;
+    document.getElementById('cardSuppliers').innerText = suppliers.length;
+    document.getElementById('cardPayable').innerText = 'S/ ' + Number(total).toFixed(2);
+
+    const tbody = document.getElementById('ordersBody');
+    if (purchases.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay órdenes de compra.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = purchases.map(p => {
+        const items = Array.isArray(p.items) ? p.items : [];
+        const insumo = items.map(i => `${i.product_name||'?'} (x${i.quantity})`).join(', ') || '—';
+        const fecha = p.created_at ? new Date(p.created_at).toLocaleDateString('es-PE') : '—';
+        return `<tr class="border-b hover:bg-slate-50">
+            <td class="p-3 font-mono font-bold">#${p.purchase_id}</td>
+            <td class="p-3 font-medium text-slate-800">${p.supplier_name||'—'}</td>
+            <td class="p-3 font-mono">${p.supplier_ruc}</td>
+            <td class="p-3">${insumo}</td>
+            <td class="p-3 font-bold">S/ ${Number(p.total_amount).toFixed(2)}</td>
+            <td class="p-3">${fecha}</td>
+            <td class="p-3 text-right whitespace-nowrap">
+                <button onclick='openEditPurchase(${JSON.stringify(p)})' class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded font-bold">✏️ Editar</button>
+                <button onclick='removePurchase(${p.purchase_id})' class="text-red-600 hover:bg-red-50 px-2 py-1 rounded font-bold">🗑️ Eliminar</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function renderSuppliers() {
+    const tbody = document.getElementById('suppliersBody');
+    if (suppliers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">No hay proveedores.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = suppliers.map(s => `<tr class="border-b hover:bg-slate-50">
+        <td class="p-3 font-medium text-slate-800">${s.name}</td>
+        <td class="p-3 font-mono">${s.document_number||'—'}</td>
+        <td class="p-3">${s.email||'—'}</td>
+        <td class="p-3">${s.phone||'—'}</td>
+        <td class="p-3 text-right whitespace-nowrap">
+            <button onclick='removeSupplier(${s.id})' class="text-red-600 hover:bg-red-50 px-2 py-1 rounded font-bold">🗑️</button>
+        </td>
+    </tr>`).join('');
+}
+
+function switchView(view) {
+    currentView = view;
+    ['orders','suppliers','recepcion'].forEach(v => {
+        const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+        if (el) el.classList.toggle('hidden', v !== view);
+    });
+    const btnMap = { orders:'tabOrdersBtn', suppliers:'tabSuppliersBtn', recepcion:'tabRecepcionBtn' };
+    Object.entries(btnMap).forEach(([k,id]) => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-md text-xs font-bold ' + (k === view ? 'text-white bg-emerald-600' : 'text-slate-500 hover:text-slate-700');
+    });
+}
+
+function setFormMode(mode) {
+    // 'order' | 'supplier'
+    document.getElementById('f_supplier_mode').value = mode === 'supplier' ? '1' : '0';
+    document.getElementById('formOrder').classList.toggle('hidden', mode !== 'order');
+    document.getElementById('formSupplier').classList.toggle('hidden', mode !== 'supplier');
+}
+
+function openEditPurchase(p) {
+    editingId = p.purchase_id;
+    setFormMode('order');
+    document.getElementById('f_id').value = p.purchase_id;
+    document.getElementById('f_supplier_id').value = p.supplier_id || '';
+    const item = Array.isArray(p.items) && p.items[0] ? p.items[0] : null;
+    if (item) {
+        document.getElementById('f_product_id').value = item.product_id || '';
+        document.getElementById('f_quantity').value = item.quantity || 1;
+        document.getElementById('f_unit_cost').value = item.unit_cost || 0;
+    } else {
+        document.getElementById('f_quantity').value = '1';
+        document.getElementById('f_unit_cost').value = '0';
+    }
+    document.getElementById('modalTitle').innerText = 'Editar Compra #' + p.purchase_id;
+    openModal();
+}
+
+function resetForm() {
+    editingId = null;
+    document.getElementById('f_id').value = '';
+    document.getElementById('f_supplier_mode').value = '0';
+    document.getElementById('f_supplier_id').value = '';
+    document.getElementById('f_product_id').value = '';
+    document.getElementById('f_quantity').value = '1';
+    document.getElementById('f_unit_cost').value = '0';
+    document.getElementById('s_name').value = '';
+    document.getElementById('s_doc').value = '';
+    document.getElementById('s_email').value = '';
+    document.getElementById('s_phone').value = '';
+    document.getElementById('s_address').value = '';
+    document.getElementById('modalTitle').innerText = 'Nuevo Registro';
+}
+
+const _baseOpenModal = window.openModal;
+window.openModal = function() {
+    resetForm();
+    if (currentView === 'suppliers') { setFormMode('supplier'); document.getElementById('modalTitle').innerText = 'Nuevo Proveedor'; }
+    else { setFormMode('order'); document.getElementById('modalTitle').innerText = 'Nueva Orden de Compra'; }
+    _baseOpenModal();
+};
+function addSupplierModal() {
+    resetForm(); setFormMode('supplier'); document.getElementById('modalTitle').innerText = 'Nuevo Proveedor'; openModal();
+}
+
+document.getElementById('modalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        if (document.getElementById('f_supplier_mode').value === '1') {
+            await api('/api/third-parties', 'POST', {
+                company_id: 1, type: 'supplier',
+                name: document.getElementById('s_name').value,
+                document_number: document.getElementById('s_doc').value,
+                email: document.getElementById('s_email').value,
+                phone: document.getElementById('s_phone').value,
+                address: document.getElementById('s_address').value,
+            });
+            showToast('Proveedor registrado');
+            closeModal(); loadSuppliers();
+        } else {
+            const supplier_id = parseInt(document.getElementById('f_supplier_id').value);
+            const product_id = parseInt(document.getElementById('f_product_id').value);
+            const quantity = parseInt(document.getElementById('f_quantity').value) || 1;
+            const unit_cost = parseFloat(document.getElementById('f_unit_cost').value) || 0;
+            if (editingId) {
+                await api('/api/purchases/' + editingId, 'PUT', { status: 'completed', company_id: 1, supplier_id, items: [{ product_id, quantity, unit_cost }] });
+                showToast('Compra actualizada');
+            } else {
+                await api('/api/purchases', 'POST', { company_id: 1, supplier_id, items: [{ product_id, quantity, unit_cost }] });
+                showToast('Compra registrada (stock incrementado)');
+            }
+            closeModal(); loadData();
+        }
+    } catch (err) { showToast(err.message, 'error'); }
+});
+
+async function removePurchase(id) {
+    if (!confirm('¿Eliminar esta compra? Ajustará el stock.')) return;
+    try { await api('/api/purchases/' + id, 'DELETE'); showToast('Compra eliminada'); loadData(); }
+    catch (err) { showToast(err.message, 'error'); }
+}
+async function removeSupplier(id) {
+    if (!confirm('¿Eliminar proveedor?')) return;
+    try { await api('/api/third-parties/' + id, 'DELETE'); showToast('Proveedor eliminado'); loadSuppliers(); }
+    catch (err) { showToast(err.message, 'error'); }
+}
+
+async function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        if (currentView === 'suppliers') {
+            const res = await fetch('/api/third-parties/upload', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message);
+            showToast(`Importados ${data.created} proveedores`);
+            loadSuppliers();
+        } else {
+            const res = await fetch('/api/purchases/upload', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message);
+            showToast(`Importadas ${data.created} compras` + (data.errors && data.errors.length ? ` (${data.errors.length} errores)` : ''));
+            loadData();
+        }
+    } catch (err) { showToast(err.message, 'error'); }
+    input.value = '';
+}
+
+(async () => {
+    await Promise.all([loadSuppliers(), loadRawProducts()]);
+    loadData();
+    const v = new URLSearchParams(location.search).get('view');
+    if (v && ['suppliers','recepcion'].includes(v)) switchView(v);
+})();
+</script>
+{% endblock %}

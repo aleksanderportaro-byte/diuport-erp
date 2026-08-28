@@ -387,6 +387,7 @@ class ProductionOrder(Base):
       Integer, ForeignKey("bill_of_materials.id"), nullable=False
   )  # Receta a ejecutar
   quantity = Column(Integer, nullable=False, default=1)  # Nº de rondas a fabricar
+  machine_time_min = Column(Float, default=0.0)  # Tiempo de máquina estimado (min)
   status = Column(
       String(50), default="pending"
   )  # 'pending', 'in_progress', 'completed', 'cancelled'
