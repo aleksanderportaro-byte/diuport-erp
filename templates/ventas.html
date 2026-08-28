@@ -123,8 +123,22 @@
 {% block modal_form %}
 <input type="hidden" id="f_id">
 <div class="grid grid-cols-1 gap-2">
-    <div><label class="text-xs text-slate-500 font-bold">Cliente *</label>
-        <select id="f_client_id" class="w-full p-2 border rounded text-xs bg-slate-50" required></select>
+    <div>
+        <label class="text-xs text-slate-500 font-bold">Cliente *</label>
+        <div class="flex items-start gap-2">
+            <select id="f_client_id" class="flex-1 w-full p-2 border rounded text-xs bg-slate-50" required></select>
+            <button type="button" onclick="toggleQuickClient()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs font-bold transition shadow-sm">➕ Nuevo</button>
+        </div>
+        <div id="quickClientForm" class="hidden mt-2 space-y-2 border border-blue-200 rounded-lg p-3 bg-blue-50">
+            <p class="text-[10px] font-bold text-blue-600 uppercase">Registrar nuevo cliente</p>
+            <input id="qc_name" placeholder="Nombre / Razón Social *" class="w-full p-2 border rounded text-xs bg-white">
+            <input id="qc_doc" placeholder="RUC / DNI" class="w-full p-2 border rounded text-xs bg-white">
+            <input id="qc_phone" placeholder="Teléfono" class="w-full p-2 border rounded text-xs bg-white">
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="toggleQuickClient(true)" class="bg-slate-200 text-slate-700 px-3 py-1.5 rounded text-xs font-bold">Cancelar</button>
+                <button type="button" onclick="saveQuickClient()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold">💾 Guardar Cliente</button>
+            </div>
+        </div>
     </div>
     <div class="grid grid-cols-2 gap-2">
         <div><label class="text-xs text-slate-500 font-bold">Producto *</label>
@@ -159,6 +173,34 @@ async function populateSelects() {
             info.innerText = `💡 ${p.name} — Precio S/ ${Number(p.price).toFixed(2)} — Stock disponible: ${p.stock}`;
         } else info.classList.add('hidden');
     };
+}
+
+function toggleQuickClient(forceClose) {
+    const f = document.getElementById('quickClientForm');
+    const show = forceClose === true ? false : f.classList.contains('hidden');
+    f.classList.toggle('hidden', !show);
+    if (show) {
+        document.getElementById('qc_name').value = '';
+        document.getElementById('qc_doc').value = '';
+        document.getElementById('qc_phone').value = '';
+        document.getElementById('qc_name').focus();
+    }
+}
+
+async function saveQuickClient() {
+    const name = document.getElementById('qc_name').value.trim();
+    const doc = document.getElementById('qc_doc').value.trim();
+    const phone = document.getElementById('qc_phone').value.trim();
+    if (!name) { showToast('Ingresa el nombre del cliente', 'error'); return; }
+    try {
+        const d = await api('/api/third-parties', 'POST', {
+            company_id: 1, type: 'client', name, document_number: doc, phone,
+        });
+        showToast('Cliente registrado y seleccionado');
+        await populateSelects();
+        document.getElementById('f_client_id').value = d.third_party_id;
+        toggleQuickClient(true);
+    } catch (err) { showToast(err.message, 'error'); }
 }
 
 async function loadData() {
