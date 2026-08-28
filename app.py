@@ -17,11 +17,21 @@ from core.models import (
     User,
 )
 from database import get_db
-from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 import io
+import os
 
 app = Flask(__name__)
+
+try:
+  from dotenv import load_dotenv
+  load_dotenv()
+except Exception:
+  pass
+
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-diuport")
 
 
 @app.route("/")
@@ -50,6 +60,25 @@ def _company_context(db):
   companies = db.query(Company).order_by(Company.legal_name).all()
   company = next((c for c in companies if c.is_active), None)
   return company, companies
+
+
+def _company_id(default=1, query_key=None):
+  """Id de empresa de la sesión actual (fuente autoritativa).
+
+  Prioriza session.get('company_id') (empresa del usuario autenticado).
+  Si no hay sesión, cae al parámetro de consulta `query_key` (retrocompatibilidad)
+  y, en último término, al valor `default`. Así las consultas siempre quedan
+  acotadas a una única empresa y nunca devuelven datos entre empresas.
+  """
+  cur = session.get("company_id")
+  if cur:
+    return cur
+  if query_key is not None:
+    v = request.args.get(query_key, type=int)
+    if v:
+      return v
+  return default
+
 
 
 def _serialize_third_party(tp):
@@ -410,7 +439,12 @@ def create_company():
 @app.route("/api/third-parties", methods=["GET"])
 def get_third_parties():
   db = next(get_db())
-  third_parties = db.query(ThirdParty).all()
+  # SIEMPRE acotado a la empresa de la sesión actual
+  third_parties = (
+      db.query(ThirdParty)
+      .filter(ThirdParty.company_id == _company_id(query_key="company_id"))
+      .all()
+  )
   result = [
       {
           "id": tp.id,
@@ -433,7 +467,7 @@ def create_third_party():
 
   try:
     new_tp = ThirdParty(
-        company_id=data.get("company_id"),
+        company_id=data.get("company_id") or session.get("company_id") or 1,
         type=data.get("type", "client"),
         document_number=data.get("document_number"),
         name=data.get("name"),
@@ -490,12 +524,11 @@ def get_products():
   db = next(get_db())
   q = db.query(Product)
 
-  company_id = request.args.get("company_id", type=int)
+  # SIEMPRE acotado a la empresa de la sesión actual (nunca entre empresas)
+  q = q.filter(Product.company_id == _company_id(query_key="company_id"))
   prod_type = request.args.get("type", type=str)
   search = request.args.get("search", type=str)
 
-  if company_id is not None:
-    q = q.filter(Product.company_id == company_id)
   if prod_type in ("raw", "termined"):
     q = q.filter(Product.type == prod_type)
   if search:
@@ -544,7 +577,7 @@ def create_product():
       )
 
     new_product = Product(
-        company_id=data.get("company_id"),
+        company_id=data.get("company_id") or session.get("company_id") or 1,
         sku=data.get("sku"),
         name=data.get("name"),
         description=data.get("description", ""),
@@ -967,7 +1000,10 @@ def get_clients():
   db = next(get_db())
   rows = (
       db.query(ThirdParty)
-      .filter(ThirdParty.type.in_(("client", "both")))
+      .filter(
+          ThirdParty.company_id == _company_id(query_key="company_id"),
+          ThirdParty.type.in_(("client", "both")),
+      )
       .all()
   )
   return jsonify([{"id": t.id, "name": t.name, "document_number": t.document_number}
@@ -979,7 +1015,10 @@ def get_suppliers():
   db = next(get_db())
   rows = (
       db.query(ThirdParty)
-      .filter(ThirdParty.type.in_(("supplier", "both")))
+      .filter(
+          ThirdParty.company_id == _company_id(query_key="company_id"),
+          ThirdParty.type.in_(("supplier", "both")),
+      )
       .all()
   )
   return jsonify([{"id": t.id, "name": t.name, "document_number": t.document_number}
@@ -992,10 +1031,17 @@ def get_suppliers():
 @app.route("/api/sales", methods=["GET"])
 def get_sales():
   db = next(get_db())
-  company_id = request.args.get("company_id", type=int)
-  q = db.query(SaleOrder)
-  if company_id is not None:
-    q = q.filter(SaleOrder.company_id == company_id)
+  q = (
+      db.query(SaleOrder)
+      # SIEMPRE acotado a la empresa de la sesión actual
+      .filter(SaleOrder.company_id == _company_id(query_key="company_id"))
+      # Carga ansiosa de relaciones para evitar N+1 (items, producto, cliente)
+      .options(
+          selectinload(SaleOrder.items).selectinload(SaleOrderItem.product),
+          selectinload(SaleOrder.client),
+          selectinload(SaleOrder.receivable),
+      )
+  )
   sales = q.order_by(SaleOrder.created_at.desc()).all()
   result = []
   for s in sales:
@@ -1028,7 +1074,7 @@ def create_sale():
   db = next(get_db())
 
   try:
-    company_id = data.get("company_id")
+    company_id = data.get("company_id") or session.get("company_id") or 1
     client_id = data.get("client_id")
     items_data = data.get("items", [])
     due_date = data.get("due_date", None)
@@ -1180,11 +1226,10 @@ def create_sale():
 @app.route("/api/receivables", methods=["GET"])
 def get_receivables():
   db = next(get_db())
-  company_id = request.args.get("company_id", type=int)
   status = request.args.get("status", type=str)
   q = db.query(AccountReceivable)
-  if company_id is not None:
-    q = q.filter(AccountReceivable.company_id == company_id)
+  # SIEMPRE acotado a la empresa de la sesión actual
+  q = q.filter(AccountReceivable.company_id == _company_id(query_key="company_id"))
   if status in ("pending", "partial", "paid"):
     q = q.filter(AccountReceivable.status == status)
   receivables = q.order_by(AccountReceivable.created_at.desc()).all()
@@ -1472,13 +1517,14 @@ def login():
           401,
       )
 
+    session["company_id"] = company.id
+    session["username"] = user.username
     return jsonify({
         "status": "success",
         "message": "¡Bienvenido al sistema!",
         "company_id": company.id,
         "user": user.username,
     })
-
   except Exception as e:
     return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -1488,10 +1534,17 @@ def login():
 @app.route("/api/purchases", methods=["GET"])
 def get_purchases():
   db = next(get_db())
-  company_id = request.args.get("company_id", type=int)
-  q = db.query(PurchaseOrder)
-  if company_id is not None:
-    q = q.filter(PurchaseOrder.company_id == company_id)
+  q = (
+      db.query(PurchaseOrder)
+      # SIEMPRE acotado a la empresa de la sesión actual
+      .filter(PurchaseOrder.company_id == _company_id(query_key="company_id"))
+      # Carga ansiosa de relaciones para evitar N+1
+      .options(
+          selectinload(PurchaseOrder.items).selectinload(PurchaseOrderItem.product),
+          selectinload(PurchaseOrder.supplier),
+          selectinload(PurchaseOrder.payable),
+      )
+  )
   purchases = q.order_by(PurchaseOrder.created_at.desc()).all()
   result = []
   for p in purchases:
@@ -1525,7 +1578,7 @@ def create_purchase():
   db = next(get_db())
 
   try:
-    company_id = data.get("company_id")
+    company_id = data.get("company_id") or session.get("company_id") or 1
     supplier_id = data.get("supplier_id")
     items_data = data.get("items", [])
     due_date = data.get("due_date", None)
@@ -1672,11 +1725,10 @@ def create_purchase():
 @app.route("/api/payables", methods=["GET"])
 def get_payables():
   db = next(get_db())
-  company_id = request.args.get("company_id", type=int)
   status = request.args.get("status", type=str)
   q = db.query(AccountPayable)
-  if company_id is not None:
-    q = q.filter(AccountPayable.company_id == company_id)
+  # SIEMPRE acotado a la empresa de la sesión actual
+  q = q.filter(AccountPayable.company_id == _company_id(query_key="company_id"))
   if status in ("pending", "partial", "paid"):
     q = q.filter(AccountPayable.status == status)
   payables = q.order_by(AccountPayable.created_at.desc()).all()
@@ -1942,12 +1994,11 @@ def _build_payroll(db, company_id):
 @app.route("/api/employees", methods=["GET"])
 def get_employees():
   db = next(get_db())
-  company_id = request.args.get("company_id", type=int)
   status = request.args.get("status", type=str)
 
   q = db.query(Employee)
-  if company_id is not None:
-    q = q.filter(Employee.company_id == company_id)
+  # SIEMPRE acotado a la empresa de la sesión actual
+  q = q.filter(Employee.company_id == _company_id(query_key="company_id"))
   if status in ("active", "terminated"):
     q = q.filter(Employee.status == status)
 
@@ -2015,7 +2066,7 @@ def create_employee():
     except ValueError as e:
       return jsonify({"status": "error", "message": str(e)}), 400
 
-    company_id = data.get("company_id", 1)
+    company_id = data.get("company_id") or session.get("company_id") or 1
 
     # DNI único dentro de la empresa
     existing = (
@@ -2175,7 +2226,7 @@ def get_payroll():
   El mismo cálculo alimenta directamente el reporte financiero.
   """
   db = next(get_db())
-  company_id = request.args.get("company_id", 1, type=int)
+  company_id = _company_id(query_key="company_id")
   return jsonify(_build_payroll(db, company_id))
 
 
@@ -2322,10 +2373,16 @@ def upload_employees():
 @app.route("/api/bom", methods=["GET"])
 def get_boms():
   db = next(get_db())
-  company_id = request.args.get("company_id", type=int)
-  q = db.query(BillOfMaterial)
-  if company_id is not None:
-    q = q.filter(BillOfMaterial.company_id == company_id)
+  q = (
+      db.query(BillOfMaterial)
+      # SIEMPRE acotado a la empresa de la sesión actual
+      .filter(BillOfMaterial.company_id == _company_id(query_key="company_id"))
+      # Carga ansiosa para evitar N+1 (líneas, productos)
+      .options(
+          selectinload(BillOfMaterial.lines).selectinload(BillOfMaterialLine.product),
+          selectinload(BillOfMaterial.output_product),
+      )
+  )
   boms = q.all()
   result = []
   for b in boms:
@@ -2356,7 +2413,7 @@ def create_bom():
   try:
     output_product_id = data.get("output_product_id")
     lines_data = data.get("lines", [])
-    company_id = data.get("company_id")
+    company_id = data.get("company_id") or session.get("company_id") or 1
 
     if not lines_data:
       return (
@@ -2451,10 +2508,13 @@ def create_bom():
 @app.route("/api/production", methods=["GET"])
 def get_production_orders():
   db = next(get_db())
-  company_id = request.args.get("company_id", type=int)
-  q = db.query(ProductionOrder)
-  if company_id is not None:
-    q = q.filter(ProductionOrder.company_id == company_id)
+  q = (
+      db.query(ProductionOrder)
+      # SIEMPRE acotado a la empresa de la sesión actual
+      .filter(ProductionOrder.company_id == _company_id(query_key="company_id"))
+      # Carga ansiosa bom -> producto de salida para evitar N+1
+      .options(selectinload(ProductionOrder.bom).selectinload(BillOfMaterial.output_product))
+  )
   orders = q.order_by(ProductionOrder.created_at.desc()).all()
   result = [{
       "id": o.id,
@@ -2478,7 +2538,7 @@ def create_production_order():
   db = next(get_db())
 
   try:
-    company_id = data.get("company_id")
+    company_id = data.get("company_id") or session.get("company_id") or 1
     bom_id = data.get("bom_id")
     quantity = data.get("quantity", 1)
 
@@ -2821,7 +2881,12 @@ def upload_boms():
 @app.route("/api/expenses", methods=["GET"])
 def get_expenses():
   db = next(get_db())
-  expenses = db.query(Expense).all()
+  # SIEMPRE acotado a la empresa de la sesión actual
+  expenses = (
+      db.query(Expense)
+      .filter(Expense.company_id == _company_id(query_key="company_id"))
+      .all()
+  )
   result = [{
       "id": e.id,
       "company_id": e.company_id,
@@ -2840,7 +2905,7 @@ def create_expense():
 
   try:
     new_expense = Expense(
-        company_id=data.get("company_id", 1),
+        company_id=data.get("company_id") or session.get("company_id") or 1,
         category=data.get("category"),
         description=data.get("description", ""),
         amount=float(data.get("amount", 0.0)),
@@ -3050,7 +3115,7 @@ def _build_financial_report(db, company_id, start_date=None, end_date=None):
 @app.route("/api/finance/report", methods=["GET"])
 def financial_report():
   db = next(get_db())
-  company_id = request.args.get("company_id", 1, type=int)
+  company_id = _company_id(query_key="company_id")
   start_date, end_date = _parse_period(
       request.args.get("start_date"), request.args.get("end_date")
   )
@@ -3069,7 +3134,7 @@ def financial_projection():
     (compras + planilla fija + gastos), flujo de caja y Utilidad Neta.
   """
   db = next(get_db())
-  company_id = request.args.get("company_id", 1, type=int)
+  company_id = _company_id(query_key="company_id")
 
   # ---- Serie mensual histórica (Ventas completadas) ----
   month_label = func.date_trunc("month", SaleOrder.created_at)
