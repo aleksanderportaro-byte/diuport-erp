@@ -347,7 +347,10 @@ document.getElementById('modalForm').addEventListener('submit', async (e) => {
             closeModal();
             loadData();
         }
-    } catch (err) { showToast(err.message, 'error'); }
+    } catch (err) {
+        showToast(err.message, 'error');
+        alert('Error al guardar: ' + (err.message || 'Ocurrió un problema inesperado.'));
+    }
 });
 
 async function removePurchase(id) {
