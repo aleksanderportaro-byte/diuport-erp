@@ -16,7 +16,7 @@ from core.models import (
     ThirdParty,
     User,
 )
-from database import get_db
+from database import get_db, shutdown_session
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
@@ -32,6 +32,17 @@ except Exception:
   pass
 
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-diuport")
+
+
+@app.teardown_appcontext
+def shutdown_db_session(exception=None):
+  """Cierra/remueve la sesión scoped al terminar cada petición.
+
+  Equivalente a `db.session.remove()` en Flask-SQLAlchemy: garantiza que la
+  conexión vuelva al pool y evita fugas aunque una ruta haya quedado a medias
+  (sin commit ni rollback), o haya abierto una sesión sin cerrarla.
+  """
+  shutdown_session()
 
 
 @app.route("/")
